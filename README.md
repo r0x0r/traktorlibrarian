@@ -35,11 +35,11 @@ This will remove duplicates from the library. The following options are supporte
 
 ## TraktorLibrarian screwed up my library / messed up my playlists / killed my first-born etc.
 
-Do not worry. TraktorLibrarian creates a backup of your library before making any changes. To restore a backup, look under <Traktor data directory>/Backup/Librarian for the latest backup, copy it to the Traktor data directory and rename it to *collection.nml*
+Do not worry. TraktorLibrarian creates a backup of your library before making any changes. To restore a backup, look under *Traktor data directory/Backup/Librarian* for the latest backup, copy it to the Traktor data directory and rename it to *collection.nml*
 
 ## Where is the Traktor data directory?
 
-On OSX it is located by default at ~/Documents/Native Instruments/Traktor <ver> 
+On OSX the default location is *~/Documents/Native Instruments/Traktor* <ver> 
 
 ## How can I see what changes were made by TraktorLibrarian?
 
