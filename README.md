@@ -3,7 +3,7 @@ Version 0.9
 A command line tool for cleaning up duplicates in Traktor Library. Currently works on Mac OSX only
 
 # Description
-TraktorLibrarian is a small utility to help you keep your Traktor library nice and tidy. It provides the following functionality:
+TraktorLibrarian is a small utility to help you keep your Traktor library nice and tidy. I wrote this tool, since Traktor does not have an option to remove duplicates from its library. It provides the following functionality:
 
 * Removes duplicates from your Traktor library
 * Test mode. In test mode it does not make any changes to the library, but just logs the changes it would make
