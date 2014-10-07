@@ -39,7 +39,7 @@ class Library:
         for entry in self.collection:
             full_path = self._get_full_path(entry)
             audio_id = entry.get("AUDIO_ID")
-            if audio_id is None: #or not os.path.exists(full_path):  # skip if file does not exist
+            if audio_id is None or not os.path.exists(full_path):  # skip if file does not exist
                 continue
 
             if audio_id in ids:
@@ -94,7 +94,11 @@ class Library:
         :return:
         """
         print "\n{} entries processed in total".format(self._total)
-        print "{} duplicates removed".format(self._duplicates)
+
+        if self._duplicates == 1:
+            print "{} duplicate removed".format(self._duplicates)
+        else:
+            print "{} duplicates removed".format(self._duplicates)
 
 
 
