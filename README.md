@@ -1,5 +1,6 @@
 # TraktorLibrarian 
 Version 0.9
+
 A command line tool for cleaning up duplicates in Traktor Library. Currently works on Mac OSX only
 
 # Description
@@ -22,7 +23,7 @@ Or alternatively download a zip from here and unpack it to a directory of your c
 
 If you are looking for a quick action, just type 
 
-`python librarian.py´
+`python librarian.py`
 
 This will remove duplicates from the library. The following options are supported
 
