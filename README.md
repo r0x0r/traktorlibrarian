@@ -1,24 +1,20 @@
 # TraktorLibrarian 
 Version 0.9
-A command line tool for cleaning up duplicates and relocating missing files in Traktor Library. Currently works on Mac OSX only
+A command line tool for cleaning up duplicates in Traktor Library. Currently works on Mac OSX only
 
 # Description
 TraktorLibrarian is a small utility to help you keep your Traktor library nice and tidy. It provides the following functionality:
 
 * Removes duplicates from your Traktor library
-* Tries to relocate missing files 
-* Removes missing files
-* Test mode. In test mode it does not make any changes to the library, but just outputs the changes it would make
+* Test mode. In test mode it does not make any changes to the library, but just logs the changes it would make
 
 TraktorLibrarian outputs its actions to the report.log file. You can browse the file to see what changes were made.
-
-Relocation of missing files is performed using OSX Spotlight search. In order it to work, you must have your music files in the Spotlight database. 
 
 # Installation
 
 If you have git installed, then type the following command in the command prompt
 
-`git clone https://github.com/r0x0r/traktorlibrarian´
+`git clone https://github.com/r0x0r/traktorlibrarian.git´
 
 Or alternatively download a zip from here and unpack it to a directory of your choice
 
@@ -26,21 +22,11 @@ Or alternatively download a zip from here and unpack it to a directory of your c
 
 If you are looking for a quick action, just type 
 
-`python librarian.py --all´
+`python librarian.py´
 
-This will remove duplicates from the library, relocates missing files and removes the missing files that cannot be located.
-
-The more advanced use
-
-`python librarian.py [options]´
-
-The following options are supported
+This will remove duplicates from the library. The following options are supported
 
 - `-l [path]` / `--library [path]` Path to Traktor Library directory. If not provided the default location of ~/Documents/Native Instruments/Traktor <latest version>  is used 
-- `-d` / `--remove-duplicates` Delete duplicate files from the library
-- `-f` / `--fix-missing` Attempt to locate missing files
-- `-r` / `--remove-missing` Remove missing files
-- `-a` / `--all` Perform all the tasks, ie attempt to locate missing files, remove duplicates and finally remove files that could not be found. Same as the options -d -f -r combined.
 - `-t` / `--test` Do a test run without making any changes to the library
 - `-v` / `--verbose` Print log information to the screen 
 

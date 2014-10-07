@@ -1,11 +1,8 @@
 __author__ = 'roman'
 
-import copy
 import sys
 import os
-import math
 import xml.etree.ElementTree as etree
-import subprocess
 import shutil
 import unicodedata
 
@@ -17,14 +14,8 @@ from conf import *
 
 class Library:
 
-    DURATION_DELTA = 2    # Maximum difference in track lengths to treat files as identical
-    BITRATE_DELTA = 3000  # Maximum difference in bitrates to treat files as identical
-
     _total = 0
     _duplicates = 0
-    _missing_replaced = 0
-    _missing_deleted = 0
-    _missing_present = 0
 
     _playlist_entries = {}
 
@@ -48,7 +39,7 @@ class Library:
         for entry in self.collection:
             full_path = self._get_full_path(entry)
             audio_id = entry.get("AUDIO_ID")
-            if audio_id is None or not os.path.exists(full_path):  # skip if file does not exist
+            if audio_id is None: #or not os.path.exists(full_path):  # skip if file does not exist
                 continue
 
             if audio_id in ids:
@@ -62,35 +53,10 @@ class Library:
         self.collection.set("ENTRIES", str(len(self.collection)))
 
 
-    def fix_missing_files(self):
-        """
-        Locate or remove missing files depending on which configuration flag is set.
-        :return:
-        """
-        delete_entries = []
-
-        for entry in self.collection:
-            full_path = self._get_full_path(entry)
-
-            if not os.path.exists(full_path):
-                if conf["fix_missing"]:
-                    if not self.replace_missing_entry(entry) and conf["remove_missing"]:
-                        # We store entry for later removal in order for them to appear after fixed entries
-                        # in the log file
-                        delete_entries.append(entry)
-                elif conf["remove_missing"]:
-                    self.remove_entry(entry, full_path, "missing")
-
-        for entry in delete_entries:
-            full_path = self._get_full_path(entry)
-            self.remove_entry(entry, full_path, "missing")
-
-        self.collection.set("ENTRIES", str(len(self.collection)))
-
 
     def remove_entry(self, entry, full_path, reason):
         """
-        Remove an entry from the library. Used both for missing and duplicate entries.
+        Remove an entry from the library.
         :param entry: Entry to remove
         :param full_path: Full path of the file
         :param reason: Reason for deletion. Can take either "missing" or "duplicate" value
@@ -105,48 +71,6 @@ class Library:
             self._duplicates += 1
 
 
-    def replace_missing_entry(self, entry):
-        """
-        Attempt to find a missing file and if successfull update the XML entry with the correct path.
-        :param entry: Entry with the missing file
-        :return: True if file was located, False otherwise
-        """
-        info = entry.find("INFO")
-        artist = entry.get("ARTIST")
-        title = entry.get("TITLE")
-
-        try:
-            if all([artist, title]):
-                bitrate = int(info.get("BITRATE"))
-                duration = int(info.get("PLAYTIME"))
-                artist = self._escape_string(artist)
-                title = self._escape_string(title)
-                new_path = self._find_file(artist, title, duration, bitrate)
-
-                if new_path:
-                    old_path = self._get_full_path(entry, True, True) # we need this for playlists
-
-                    location = entry.find("LOCATION")
-                    dir, file_name = os.path.split(new_path)
-                    dir = unicodedata.normalize("NFC", self._traktorize_path(dir + os.path.sep))
-                    file_name = unicodedata.normalize("NFC", file_name)
-                    location.set("DIR", dir)
-                    location.set("FILE", file_name)
-
-                    self._missing_replaced += 1
-                    self.logger.info(u"Found replacement for \"{} - {}\": {}".format(artist, title, new_path))
-
-                    new_path = self._get_full_path(entry, True, True)
-                    self._add_playlist_entry(old_path, new_path)
-
-                    return True
-                else:
-                    self._missing_present += 1
-                    return False
-
-        except TypeError as e:
-            self.logger.debug(u"{} - {} [{}, Duration {}]"
-                              .format(artist, title, info.get("BITRATE"), info.get("DURATION")))
 
 
     def process_playlists(self):
@@ -170,18 +94,8 @@ class Library:
         :return:
         """
         print "\n{} entries processed in total".format(self._total)
+        print "{} duplicates removed".format(self._duplicates)
 
-        if conf["remove_duplicates"]:
-            print "{} duplicates removed".format(self._duplicates)
-
-        if conf["fix_missing"]:
-            print "{} missing file replacements found".format(self._missing_replaced)
-
-            if not conf["remove_missing"]:
-                print "{} missing files are present in the library".format(self._missing_deleted)
-
-        if conf["remove_missing"]:
-            print "{} missing files are deleted".format(self._missing_deleted)
 
 
     def flush(self):
@@ -231,15 +145,6 @@ class Library:
         return separator.join(path_parts)
 
 
-    def _escape_string(self, string):
-        """
-        Escape a string for correct parsing in mdfind
-        :param string: input string
-        :return: escaped string
-        """
-        return unicode(string.strip().replace("\\", "\\\\").replace("\"", "\\\"").replace("'", "\'"))
-
-
     def _add_playlist_entry(self, old_path, new_path):
         """
         Adds a new path to the dictionary of files which path has been changed for further processing
@@ -249,40 +154,6 @@ class Library:
         """
         if old_path not in self._playlist_entries:
             self._playlist_entries[old_path] = unicodedata.normalize("NFC", new_path)
-
-
-    def _find_file(self, artist, title, duration, bitrate):
-        """
-        Find a file using OSX Spotlight search. 
-        :param artist:
-        :param title:
-        :param duration:
-        :param bitrate:
-        :return:
-        """
-        # Bitrate information found in the Spotlight database might differ from the information stored in
-        # Traktor, that's why we check for a range
-        bitrate_ceiling = bitrate + self.BITRATE_DELTA
-        bitrate_floor = bitrate - self.BITRATE_DELTA
-
-        # Same goes for track lengths
-        duration_ceiling = math.ceil(duration) + self.DURATION_DELTA
-        duration_floor = math.floor(duration) - self.DURATION_DELTA
-
-        search_string = u"kMDItemAuthors=\"{}\"c && kMDItemTitle=\"{}\"c && kMDItemDurationSeconds <= {} && " \
-                        u"kMDItemDurationSeconds >= {}".format(artist, title, duration_ceiling, duration_floor)
-
-        if bitrate != -1:
-            search_string += u" && kMDItemTotalBitRate <= {} && kMDItemTotalBitRate >= {}".format(bitrate_ceiling,
-                                                                                                 bitrate_floor)
-
-        filelist = subprocess.check_output(['mdfind', search_string]).rstrip().split("\n")
-
-        for f in filelist:
-            if os.path.exists(f):
-                return unicode(f, "utf-8")
-
-        return None
 
 
     def _backup(self):
