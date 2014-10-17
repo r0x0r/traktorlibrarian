@@ -7,6 +7,7 @@ A command line tool for cleaning up duplicates in Traktor Library. Compatible wi
 TraktorLibrarian is a small utility to help you keep your Traktor library nice and tidy. I wrote this tool, since Traktor does not have an option to remove duplicates from its library. It provides the following functionality:
 
 * Removes duplicates from your Traktor library
+* Smart choice of which duplicates are kept. Files with user set cue points are preferred over files with no user changes.
 * Updates playlists with correct paths
 * Test mode. In test mode it does not make any changes to the library, but just logs the changes it would make
 
