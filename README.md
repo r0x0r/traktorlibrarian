@@ -1,12 +1,13 @@
 # TraktorLibrarian 
-Version 0.9
+Version 0.95
 
-A command line tool for cleaning up duplicates in Traktor Library. Currently works on Mac OSX only
+A command line tool for cleaning up duplicates in Traktor Library. Compatible with Mac OSX and Windows.
 
 # Description
 TraktorLibrarian is a small utility to help you keep your Traktor library nice and tidy. I wrote this tool, since Traktor does not have an option to remove duplicates from its library. It provides the following functionality:
 
 * Removes duplicates from your Traktor library
+* Updates playlists with correct paths
 * Test mode. In test mode it does not make any changes to the library, but just logs the changes it would make
 
 TraktorLibrarian outputs its actions to the report.log file. You can browse the file to see what changes were made.
@@ -47,5 +48,16 @@ On OSX the default location is *~/Documents/Native Instruments/Traktor* <ver>
 Look in the *report.log* file (located in the same directory as TraktorLibrarian) for all the changes that were made to the library.
 
 
+# Changelog
 
+## 0.95
+
+- `New` Windows support
+- `New` Python 3 support
+- `Improved` More informative messages of what has been done
+- `Improved` It can detect and handle correctly more than two duplicates
+- `Fixed` Incorrect paths in playlists
+
+## 0.9
+ - First version
 

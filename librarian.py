@@ -31,7 +31,6 @@ def main():
         lib.remove_duplicates()
         print("DONE")
 
-        lib.process_playlists()
         lib.report()
 
         if not conf["test"]:
@@ -45,7 +44,42 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+def get_traktor_dir():
+
+    base_dir = os.path.expanduser("~")
+
+    if sys.platform == "darwin":
+        base_dir = os.path.join(base_dir, u"Documents")
+    elif sys.platform == "win32":
+        base_dir = os.path.join(base_dir, u"My Documents")
+        
+    traktor_dir = os.path.join(base_dir, u"Native Instruments", u"Traktor*")
+    traktor_dir = glob(traktor_dir)
+
+    if traktor_dir:
+        # if the Traktor directory exists, then we get the last entry
+        return traktor_dir[-1]
+
+    return ""
+
+
+def is_traktor_running():
+
+    if sys.platform == "darwin":
+        try:
+            subprocess.check_output(['pgrep', 'Traktor'])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+    elif sys.platform == "win32":
+        output = subprocess.check_output(['tasklist', '/FI', "IMAGENAME eq Traktor.exe"]).decode("ascii", "ignore")
+        if output.find("Traktor.exe") != -1:
+            return True
+        else:
+            return False
+
+
+def parse_arguments():
     # Parse arguments
     parser = argparse.ArgumentParser(description=("Traktor Librarian. Cleans up and fixes incostistencies in Traktor"
                                                   " library"))
@@ -56,37 +90,34 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
     args = parser.parse_args()
 
-    error = False
-
     # Check that Traktor is not running. Quit if it does.
-    try:
-        subprocess.check_output(['pgrep', 'Traktor'])
+    if is_traktor_running():
         logger.error("Traktor is running. Please quit Traktor first.")
-        sys.exit(1)
-    except subprocess.CalledProcessError:
-        pass
+        return False
 
     if args.library:
         conf["library_dir"] = args.library
     else:
-        home_dir = os.path.expanduser("~")
-        traktor_dir = os.path.join(home_dir, u"Documents", u"Native Instruments", u"Traktor*")
-        traktor_dir = glob(traktor_dir)
-
-        if traktor_dir:
-            # if the Traktor directory exists, then we get the last entry
-            conf["library_dir"] = traktor_dir[-1]
+        conf["library_dir"] = get_traktor_dir()
 
     # check that collection.nml exists in the Traktor library directory
     collection_path = os.path.join(conf["library_dir"], u"collection.nml")
 
     if not os.path.exists(collection_path):
         logger.error(u"Traktor library not found: {}".format(collection_path))
-        sys.exit(1)
+        return False
     else:
         print("Using Traktor library found in {}\n".format(conf["library_dir"]))
 
     conf["test"] = args.test
     conf["verbose"] = args.verbose
 
-    main()
+    return True
+
+
+if __name__ == '__main__':
+
+    if parse_arguments():
+        main()
+    else:
+        sys.exit(1)
