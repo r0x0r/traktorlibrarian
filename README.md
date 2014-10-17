@@ -41,7 +41,8 @@ Do not worry. TraktorLibrarian creates a backup of your library before making an
 
 ## Where is the Traktor data directory?
 
-On OSX the default location is *~/Documents/Native Instruments/Traktor* <ver> 
+On OSX the default location is *~/Documents/Native Instruments/Traktor*
+On Windows it is *%USERPROFILE%/My Documents/Native Instruments/Traktor*
 
 ## How can I see what changes were made by TraktorLibrarian?
 
