@@ -17,7 +17,7 @@ TraktorLibrarian outputs its actions to the report.log file. You can browse the 
 
 If you have git installed, then type the following command in the command prompt
 
-`git clone https://github.com/r0x0r/traktorlibrarian.git´
+`git clone https://github.com/r0x0r/traktorlibrarian.git`
 
 Or alternatively download a zip from here and unpack it to a directory of your choice
 
