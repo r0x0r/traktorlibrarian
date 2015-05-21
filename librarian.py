@@ -15,7 +15,9 @@ import logging
 from glob import glob
 
 from conf import *
-from traktorlibrary import Library
+from clean import Cleaner
+from export import Exporter
+from library import Library
 
 logger = logging.getLogger(__name__)
 sh = logging.StreamHandler()
@@ -26,18 +28,25 @@ logger.addHandler(sh)
 
 def main():
     try:
-        lib = Library()
-        print("Removing duplicates..."),
-        lib.remove_duplicates()
-        print("DONE")
+        lib = Library(conf["library_dir"])
 
-        lib.report()
+        if conf["action"] == "duplicates":
+            cleaner = Cleaner(lib)
+            print("Removing duplicates..."),
+            cleaner.remove_duplicates()
+            print("DONE")
 
-        if not conf["test"]:
-            lib.flush()
-            print("\nTraktor library updated.")
-        else:
-            print("\nTest run. No changes made to the library.")
+            cleaner.report()
+
+            if not conf["test"]:
+                lib.flush()
+                print("\nTraktor library updated.")
+            else:
+                print("\nTest run. No changes made to the library.")
+        elif conf["action"] == "export":
+            exporter = Exporter(lib, conf["export_dir"])
+            exporter.export()
+
 
     except Exception as e:
         logger.error(e, exc_info=True)
@@ -83,6 +92,13 @@ def parse_arguments():
     # Parse arguments
     parser = argparse.ArgumentParser(description=("Traktor Librarian. Cleans up and fixes incostistencies in Traktor"
                                                   " library"))
+
+    source_group = parser.add_mutually_exclusive_group()
+    source_group.add_argument('-d', '--duplicates', help='Clean Traktor Library from duplicates.',
+                        action='store_true')
+    source_group.add_argument('-e', '--export', help='Export the entire Traktor Library to a given location.',
+                        type=str)
+
     parser.add_argument('-l', '--library', help='Path to Traktor Library directory. If not provided the default location is used',
                         type=str)
     parser.add_argument('-t', '--test', help='Do a test run without making any changes to the library',
@@ -111,6 +127,16 @@ def parse_arguments():
 
     conf["test"] = args.test
     conf["verbose"] = args.verbose
+
+    if args.duplicates:
+        conf["action"] = "duplicates"
+    elif args.export:
+        conf["action"] = "export"
+        conf["export_dir"] = args.export
+    else:
+        logger.error(u"Please specify an action")
+        return False
+
 
     return True
 
