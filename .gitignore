@@ -1,1 +1,4 @@
 *.pyc
+.eggs
+dist*
+build

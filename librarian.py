@@ -53,15 +53,31 @@ def main():
         sys.exit(1)
 
 
-def get_traktor_dir():
 
+def is_traktor_running():
+
+    if sys.platform == "darwin":
+        try:
+            subprocess.check_output(['pgrep', 'Traktor'])
+            return True
+        except subprocess.CalledProcessError as e:
+            return False
+    elif sys.platform == "win32":
+        output = subprocess.check_output(['tasklist', '/FI', "IMAGENAME eq Traktor.exe"]).decode("ascii", "ignore")
+        if output.find("Traktor.exe") != -1:
+            return True
+        else:
+            return False
+
+
+def get_traktor_dir():
     base_dir = os.path.expanduser("~")
 
     if sys.platform == "darwin":
         base_dir = os.path.join(base_dir, u"Documents")
     elif sys.platform == "win32":
         base_dir = os.path.join(base_dir, u"My Documents")
-        
+
     traktor_dir = os.path.join(base_dir, u"Native Instruments", u"Traktor*")
     traktor_dir = glob(traktor_dir)
 
@@ -72,20 +88,14 @@ def get_traktor_dir():
     return ""
 
 
-def is_traktor_running():
+def library_exists(directory):
+    collection_path = os.path.join(directory, u"collection.nml")
+    if not os.path.exists(collection_path):
+        logger.error(u"Traktor library not found: {}".format(collection_path))
+        return False
+    else:
+        return True
 
-    if sys.platform == "darwin":
-        try:
-            subprocess.check_output(['pgrep', 'Traktor'])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-    elif sys.platform == "win32":
-        output = subprocess.check_output(['tasklist', '/FI', "IMAGENAME eq Traktor.exe"]).decode("ascii", "ignore")
-        if output.find("Traktor.exe") != -1:
-            return True
-        else:
-            return False
 
 
 def parse_arguments():
@@ -116,17 +126,15 @@ def parse_arguments():
     else:
         conf["library_dir"] = get_traktor_dir()
 
-    # check that collection.nml exists in the Traktor library directory
-    collection_path = os.path.join(conf["library_dir"], u"collection.nml")
-
-    if not os.path.exists(collection_path):
-        logger.error(u"Traktor library not found: {}".format(collection_path))
-        return False
-    else:
+    if library_exists(conf["library_dir"]):
         print("Using Traktor library found in {}\n".format(conf["library_dir"]))
+    else:
+        logger.error(u"Traktor library not found in : {}".format(conf["library_dir"]))
+        return False
 
     conf["test"] = args.test
     conf["verbose"] = args.verbose
+    conf["filelog"] = True
 
     if args.duplicates:
         conf["action"] = "duplicates"

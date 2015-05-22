@@ -1,0 +1,83 @@
+import os
+import sys
+import librarian
+import json
+
+from traktorlibraryold import Library
+from conf import *
+
+abspath = os.path.dirname(__file__)
+sys.path.append(abspath)
+import web
+
+os.environ["SCRIPT_NAME"] = ""
+os.environ["REAL_SCRIPT_NAME"] = ""
+
+urls = (
+    '/', "Index",
+)
+
+render = web.template.render('templates/')
+
+
+class Index:
+
+    traktor_lib = None
+
+    def GET(self):
+        traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
+        return render.index(traktor_dir)
+
+    def POST(self):
+        request = json.loads(web.data())
+
+        if request["action"] == "check":
+            if librarian.is_traktor_running():
+                response = {"status": "error", "reason": "running"}
+            elif not librarian.library_exists(request["library_dir"]):
+                response = {"status": "error", "reason": "nolibrary"}
+            else:
+                conf["library_dir"] = request["library_dir"]
+                conf["filelog"] = False # disable file logging
+                conf["verbose"] = False # disable verbose messages
+                response = {"status": "ok"}
+
+            return json.dumps(response)
+        elif request["action"] == "scan":
+            Index.traktor_lib = Library()
+            Index.traktor_lib.remove_duplicates()
+
+            response = Index.traktor_lib.get_result()
+            response["status"] = "ok"
+
+            return json.dumps(response)
+
+        elif request["action"] == "remove":
+            try:
+                response = {"status": "ok", "backup": Index.traktor_lib.flush()}
+            except:
+                response = {"status": "error"}
+
+            return json.dumps(response)
+
+
+def start_webserver(port, tries=0):
+    import socket
+
+    class WebApplication(web.application):
+        def run(self, port=8080, *middleware):
+            func = self.wsgifunc(*middleware)
+            return web.httpserver.runsimple(func, ('localhost', port))
+
+
+    try:
+        global http_port
+        webapp = WebApplication(urls, globals())
+        http_port = port
+        webapp.run(port = port)
+    except socket.error as e: # retry to start a server on a different port if the current pot is occupied
+        if tries > 10: # give up after 10th try
+            raise e
+        else:
+            start_webserver(port + 1, tries + 1)
+

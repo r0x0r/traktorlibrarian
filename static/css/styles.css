@@ -1,0 +1,125 @@
+body {
+    font-size: 14pt;
+    font-weight: 100;
+    color: white;
+    background: #333;
+    font-family: Helvetica Neue, Helvetica, Verdana, Arial, sans-serif;
+    cursor: default;
+    letter-spacing: 0.5px;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+header {
+    width: 100%;
+    padding: 30px;
+    background: #333 url("../img/footer_lodyas.png");
+    box-shadow: 0px 3px 7px #222;
+    position: fixed;
+    z-index: 2;
+}
+
+h1 {
+    font-size: 26pt;
+    font-family: bebas_neueregular, sans-serif;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-style: oblique;
+    margin-top: 0;
+}
+
+#content {
+    padding: 40px;
+    position: relative;
+    top: 120px;
+    min-height: 300px
+}
+
+section {
+    min-height: 100%;
+}
+
+.error:before {
+    content: "\2716\0009";
+}
+
+.error {
+    margin-top: 1em;
+}
+
+.center {
+    display: -webkit-flex;
+    -webkit-flex-direction: column;
+    -webkit-align-items: center;
+    -webkit-justify-content: center;
+}
+
+#processing {
+    padding-top: 100px;
+}
+
+#checkmark {
+    font-size: 52pt;
+    color: greenyellow;
+    margin: 30px auto;
+    padding: 0;
+    text-shadow: 3px 1px #666;
+}
+
+#done-text {
+    font-size: 24pt;
+    font-weight: 300;
+}
+
+#duplicates {
+    margin-top: 40px;
+}
+
+.duplicate-item {
+    margin-bottom: 15px;
+    font-size: 11pt;
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+
+}
+
+.old, .error {
+    color: indianred;
+}
+
+.new {
+    color: #2ecc71;
+}
+
+.old:before {
+    content: "\2716\0009";
+}
+
+.new:before {
+    content: "\2714\0009";
+}
+
+.back:link, .back:visited {
+    font-size: 14pt;
+    color: #9fa8b0;
+    text-decoration: none;
+    font-weight: 300;
+    position: relative;
+    top: -20px;
+    left: -10px;
+}
+
+.back:hover {
+    color: white;
+}
+
+#backup {
+    -webkit-user-select: text;
+    user-select: text;
+    font-size: 10pt;
+    color: rgba(255,255,255,0.6);
+}
