@@ -1,4 +1,6 @@
+*.nml
 *.pyc
 .eggs
 dist*
 build
+report.log

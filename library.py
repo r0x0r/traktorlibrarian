@@ -2,10 +2,12 @@ import xml.etree.ElementTree as etree
 import shutil
 import os
 import sys
+import copy
 import logging
 
 from datetime import datetime
 from conf import *
+
 
 class Library:
 
@@ -13,9 +15,9 @@ class Library:
         self._set_logger()
         self.traktor_path = path
         self.library_path = os.path.join(path, "collection.nml")
-        self._tree = etree.parse(self.library_path)
-        self.collection = self._tree.getroot().find("COLLECTION")
-        self.playlists = self._tree.getroot().find("PLAYLISTS")
+        self.tree = etree.parse(self.library_path)
+        self.collection = self.tree.getroot().find("COLLECTION")
+        self.playlists = self.tree.getroot().find("PLAYLISTS")
 
     def flush(self, path=None):
         """
@@ -26,7 +28,17 @@ class Library:
             self._backup()
             path = self.library_path
 
-        self._tree.write(path, encoding="utf-8", xml_declaration=True)
+        self.tree.write(path, encoding="utf-8", xml_declaration=True)
+
+    def create_new(self):
+        version = self.tree.getroot().attrib["VERSION"]
+        root = etree.Element("NML", attrib={"VERSION": version})
+
+        etree.SubElement(root, "MUSICFOLDERS")
+        etree.SubElement(root, "COLLECTION")
+        etree.SubElement(root, "PLAYLISTS")
+
+        return etree.ElementTree(root)
 
     def _backup(self):
         backup_path = os.path.join(self.traktor_path, "Backup", "Librarian")
@@ -37,7 +49,6 @@ class Library:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         destination = os.path.join(backup_path, "collection_{}.nml".format(timestamp))
         shutil.copy(self.library_path, destination)
-
 
     def get_full_path(self, entry, include_volume=False, traktorize=False):
         """
@@ -56,7 +67,7 @@ class Library:
         full_path = os.path.join(dir, file)
 
         if traktorize:
-            full_path = self._traktorize_path(full_path)
+            full_path = self.traktorize_path(full_path)
 
         if include_volume:
             volume = location.get("VOLUME")
@@ -64,18 +75,19 @@ class Library:
 
         return full_path
 
-
-    def _traktorize_path(self, path):
+    def traktorize_path(self, path):
         """
         Convert a path to the Traktor format, that is with a colon preceding each directory name
         :param path: Path to convert
         :return: Traktorized path
         """
+
+        # / is a valid filename character on OSX, so we must escape it before splitting the path
+        path = path.replace("//", "%___%")
         path_parts = path.split("/")
         separator = "/:"
 
-        return separator.join(path_parts)
-
+        return separator.join(path_parts).replace("%___%", "//")
 
     def _set_logger(self):
         """

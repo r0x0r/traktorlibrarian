@@ -6,9 +6,6 @@ import operator
 import logging
 
 
-
-
-
 class Cleaner:
 
     def __init__(self, library):

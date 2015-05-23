@@ -47,11 +47,9 @@ def main():
             exporter = Exporter(lib, conf["export_dir"])
             exporter.export()
 
-
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(1)
-
 
 
 def is_traktor_running():
