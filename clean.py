@@ -4,6 +4,7 @@ import sys
 import os
 import operator
 import logging
+from logger import configure_logger
 
 
 class Cleaner:
@@ -13,6 +14,8 @@ class Cleaner:
         self._total = len(library.collection)
         self._duplicates = 0
         self._playlist_entries = {}
+        self._removed_duplicates = []
+        self.logger = configure_logger(logging.getLogger(__name__))
 
     def remove_duplicates(self):
         """
@@ -48,6 +51,7 @@ class Cleaner:
                 for entry in remove_entries:
                     old_path = self.library.get_full_path(entry, sys.platform == "win32")
                     self.logger.info(u"Removing \"{}\" in favour of \"{}\"".format(old_path, new_path))
+                    self._removed_duplicates.append((old_path, new_path)) # store the same information for UI
 
                     collection.remove(entry) # remove from the collection
                     self._add_playlist_entry(entry, entry_keep) # save to the playlist dictionary for further processing
@@ -58,6 +62,15 @@ class Cleaner:
         self.process_playlists()
         collection.set("ENTRIES", str(len(collection)))
 
+    def get_result(self):
+        """
+        Return result of duplicates removal in form of a dictionary {"count": number_of_duplicates,
+        "duplicates": a list of tuples of removed duplicates (old_path, new_path)). Invoked by UI to get information
+        about the run.
+        :return:
+        """
+
+        return {"count": self._duplicates, "duplicates": self._removed_duplicates}
 
     def _choose_entry(self, entries):
         """

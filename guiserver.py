@@ -3,7 +3,9 @@ import sys
 import librarian
 import json
 
-from traktorlibraryold import Library
+from clean import Cleaner
+from export import Exporter
+from library import Library
 from conf import *
 
 abspath = os.path.dirname(__file__)
@@ -44,10 +46,11 @@ class Index:
 
             return json.dumps(response)
         elif request["action"] == "scan":
-            Index.traktor_lib = Library()
-            Index.traktor_lib.remove_duplicates()
+            Index.traktor_lib = Library(conf["library_dir"])
+            Index.cleaner = Cleaner(Index.traktor_lib)
+            Index.cleaner.remove_duplicates()
 
-            response = Index.traktor_lib.get_result()
+            response = Index.cleaner.get_result()
             response["status"] = "ok"
 
             return json.dumps(response)

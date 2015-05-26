@@ -18,19 +18,17 @@ from conf import *
 from clean import Cleaner
 from export import Exporter
 from library import Library
+from logger import configure_logger
 
-logger = logging.getLogger(__name__)
-sh = logging.StreamHandler()
-sh.setLevel(logging.ERROR)
-sh.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-logger.addHandler(sh)
+conf["filelog"] = True
+logger = configure_logger(logging.getLogger(__name__))
 
 
 def main():
     try:
         lib = Library(conf["library_dir"])
 
-        if conf["action"] == "duplicates":
+        if conf["action"] == "clean":
             cleaner = Cleaner(lib)
             print("Removing duplicates..."),
             cleaner.remove_duplicates()
@@ -95,29 +93,32 @@ def library_exists(directory):
         return True
 
 
-
 def parse_arguments():
     # Parse arguments
     parser = argparse.ArgumentParser(description=("Traktor Librarian. Cleans up and fixes incostistencies in Traktor"
                                                   " library"))
 
-    source_group = parser.add_mutually_exclusive_group()
-    source_group.add_argument('-d', '--duplicates', help='Clean Traktor Library from duplicates.',
-                        action='store_true')
-    source_group.add_argument('-e', '--export', help='Export the entire Traktor Library to a given location.',
-                        type=str)
-
     parser.add_argument('-l', '--library', help='Path to Traktor Library directory. If not provided the default location is used',
                         type=str)
-    parser.add_argument('-t', '--test', help='Do a test run without making any changes to the library',
-                        action='store_true')
-    parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
-    args = parser.parse_args()
 
-    # Check that Traktor is not running. Quit if it does.
-    if is_traktor_running():
-        logger.error("Traktor is running. Please quit Traktor first.")
-        return False
+    parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
+
+    subparsers = parser.add_subparsers(help='Available actions are:')
+
+    clean_parser = subparsers.add_parser('clean', help='Clean Traktor Library from duplicates')
+    clean_parser.add_argument('-t', '--test', help='Do a test run without making any changes to the library',
+                              action='store_true')
+    clean_parser.set_defaults(func=parse_clean)
+
+    export_parser = subparsers.add_parser('export', help='Export the entire Traktor Library to a given location')
+    export_parser.add_argument("destination", metavar="<Volume>", nargs="?",
+                               help="Volume name the collection will be exported to. Used with export argument.")
+
+    export_parser.add_argument('-r', '--remove', action='store_true',
+                               help='Remove files from the destination not longer present in the Traktor library')
+    export_parser.set_defaults(func=parse_export)
+
+    args = parser.parse_args()
 
     if args.library:
         conf["library_dir"] = args.library
@@ -130,20 +131,31 @@ def parse_arguments():
         logger.error(u"Traktor library not found in : {}".format(conf["library_dir"]))
         return False
 
-    conf["test"] = args.test
     conf["verbose"] = args.verbose
-    conf["filelog"] = True
 
-    if args.duplicates:
-        conf["action"] = "duplicates"
-    elif args.export:
-        conf["action"] = "export"
-        conf["export_dir"] = args.export
-    else:
-        logger.error(u"Please specify an action")
+    # Check that Traktor is not running. Quit if it does.
+    if is_traktor_running():
+        logger.error("Traktor is running. Please quit Traktor first.")
+        #return False
+
+    return args.func(args)
+
+
+def parse_clean(args):
+    conf["action"] = "clean"
+    conf["test"] = args.test
+
+    return True
+
+
+def parse_export(args):
+    if not args.destination:
+        logger.error(u"Please specify destination")
         return False
 
-
+    conf["action"] = "export"
+    conf["export_dir"] = args.destination
+    conf["remove_orphans"] = args.remove
     return True
 
 

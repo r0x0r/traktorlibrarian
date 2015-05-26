@@ -4,44 +4,43 @@ import shutil
 import xml.etree.ElementTree as etree
 import logging
 
-from Queue import Queue
+from unicodedata import normalize
+from copy import deepcopy
 from threading import Thread
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-stream_logger = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_logger)
-
+from logger import configure_logger
+from conf import conf
 
 class Exporter:
     REPLACE_CHARS = "\/:*?\"<>|"
-    MUSIC_DIR = ".Music"
+    MUSIC_DIR = u".Music"
 
     def __init__(self, library, volume):
         self.library = library
         self.volume = volume
         self.destination = os.path.join("/Volumes", volume)
         self.music_dir = os.path.join(self.destination, Exporter.MUSIC_DIR)
-
-        self.queue = Queue(maxsize=0)
         self._entries = {}
+        self.logger = configure_logger(logging.getLogger(__name__))
 
         self._check_volume()
 
     def export(self):
         tree = self.library.tree
         collection = tree.getroot().find("COLLECTION")
-        self._start_copy_thread()
+        self._start_copy_thread(deepcopy(collection))
 
         for entry in collection:
-            file_name = entry.find("LOCATION").attrib["FILE"]
+            file_name = normalize("NFD", unicode(entry.find("LOCATION").attrib["FILE"]))
             self._entries[file_name] = entry
-            self.queue.put(entry)
 
             location = entry.find("LOCATION")
             location.attrib["DIR"] = "/:" + Exporter.MUSIC_DIR + "/:"
             location.attrib["VOLUME"] = self.volume
             location.attrib["VOLUMEID"] = self.volume
+
+        if conf["remove_orphans"]:
+            self._remove_orphan_files()
 
         self._process_playlists()
 
@@ -49,20 +48,13 @@ class Exporter:
         if not os.path.exists(self.destination):
             raise IOError("Volume {0} does not exist.".format(self.volume))
 
-    def _remove_orphan_files(self, file_paths):
+    def _remove_orphan_files(self):
+        file_paths = self._entries.keys()
         orphans = set(os.listdir(self.music_dir)) - set(file_paths)
+
         for orphan in orphans:
-            print("Removing {}".format)
-            os.remove(orphan)
-
-    def _create_playlist_structure(self, tree, name, total):
-        playlists = tree.getroot().find("PLAYLISTS")
-        playlists.clear()
-
-        parent = etree.SubElement(playlists, "NODE", attrib={"TYPE": "FOLDER", "NAME": "$ROOT"})
-        parent = etree.SubElement(parent, "SUBNODES", attrib={"COUNT": "1"})
-        parent = etree.SubElement(parent, "NODE", attrib={"TYPE": "PLAYLIST", "NAME": name})
-        return etree.SubElement(parent, "PLAYLIST", attrib={"ENTRIES": str(total), "TYPE": "LIST", "UUID": ""})
+            print(u"Removing {0}".format(orphan))
+            os.remove(os.path.join(self.music_dir, orphan))
 
     def _create_playlist_entry(self, parent, entry):
         path = self.library.get_full_path(entry, True, True)
@@ -80,7 +72,7 @@ class Exporter:
                     try:
                         os.mkdir(new_dir)
                     except OSError as e:
-                        logger.debug(e)
+                        self.logger.debug(e)
 
                     recursive_scan(node.find("SUBNODES"), new_dir)
 
@@ -94,6 +86,10 @@ class Exporter:
                     entries = self._get_playlist_entries(node)
                     self._export_playlist(entries, name, directory)
 
+        # Export all tracks
+        self._export_playlist(self._entries.values(), u"All tracks", self.destination)
+
+        # Export playlists
         nodes = self.library.playlists.find("NODE").find("SUBNODES")
         recursive_scan(nodes, self.destination)
 
@@ -108,19 +104,18 @@ class Exporter:
 
         for playlist_entry in node.find("PLAYLIST"):
             key = playlist_entry.find("PRIMARYKEY")
-            file_name = key.attrib["KEY"].split("/:")[-1]
-
+            file_name = normalize("NFD", unicode(key.attrib["KEY"].split("/:")[-1]))
             entries.append(self._entries[file_name])
 
         return entries
 
     def _export_playlist(self, entries, name, directory):
-        logger.info(u"Exporting playlist {0} to directory {1}".format(name, directory))
+        self.logger.info(u"Exporting playlist {0} to directory {1}".format(name, directory))
 
         tree = self.library.create_new()
         collection = tree.getroot().find("COLLECTION")
         collection.attrib["ENTRIES"] = str(len(entries))
-        playlist = self._create_playlist_structure(tree, name, len(entries))
+        playlist = self.library.create_playlist_structure(tree, name, len(entries))
 
         for entry in entries:
             collection.append(entry)
@@ -130,36 +125,35 @@ class Exporter:
         full_path = os.path.join(directory, name + u".nml")
         tree.write(full_path, encoding="utf-8", xml_declaration=True)
 
-    def _start_copy_thread(self):
-        worker = Thread(target=self._copy_files, args=(self.queue,))
-        #worker.setDaemon(True)
+    def _start_copy_thread(self, collection):
+        worker = Thread(target=self._copy_files, args=(collection, ))
+        #worker.daemon = True
         worker.start()
 
-    def _copy_files(self, file_paths):
+    def _copy_files(self, collection):
         if not os.path.exists(self.music_dir):
             os.makedirs(self.music_dir)
 
-        while not self.queue.empty():
-            entry = self.queue.get()
-
+        for entry in collection:
             location = entry.find("LOCATION")
-            src_path = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
+            src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
             file_name = location.attrib["FILE"]
+            dest = os.path.join(self.music_dir, file_name)
 
             try:
-                if os.path.exists(src_path) and not os.path.exists(os.path.join(self.music_dir, file_name)):
-                    destination_path = os.path.join(self.music_dir, file_name)
+                if os.path.exists(src):
+                    # skip existing unmodified files
+                    if os.path.exists(dest) and (os.stat(src).st_mtime - os.stat(dest).st_mtime) < 60:
+                        continue
+
                     print (u"Copying {}".format(file_name))
-                    self._copy(src_path, destination_path)
+                    Exporter._copy(src, dest)
 
             except IOError as e:
-                # add logger
-                pass
+                self.logger.error(e)
 
-            self.queue.task_done()
-
-
-def _copy(self, src, dst, buffer_size=10485760):
+    @staticmethod
+    def _copy(src, dst, buffer_size=10485760):
         '''
         Copies a file to a new location. Much faster performance than Apache Commons due to use of larger buffer
         @param src:    Source File

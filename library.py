@@ -3,7 +3,7 @@ import shutil
 import os
 import sys
 import copy
-import logging
+import logger
 
 from datetime import datetime
 from conf import *
@@ -12,10 +12,9 @@ from conf import *
 class Library:
 
     def __init__(self, path):
-        self._set_logger()
         self.traktor_path = path
         self.library_path = os.path.join(path, "collection.nml")
-        self.tree = etree.parse(self.library_path)
+        self.tree = etree.parse(self.library_path, parser=etree.XMLParser(encoding="utf-8"))
         self.collection = self.tree.getroot().find("COLLECTION")
         self.playlists = self.tree.getroot().find("PLAYLISTS")
 
@@ -39,6 +38,16 @@ class Library:
         etree.SubElement(root, "PLAYLISTS")
 
         return etree.ElementTree(root)
+
+    @staticmethod
+    def create_playlist_structure(tree, name, total):
+        playlists = tree.getroot().find("PLAYLISTS")
+        playlists.clear()
+
+        parent = etree.SubElement(playlists, "NODE", attrib={"TYPE": "FOLDER", "NAME": "$ROOT"})
+        parent = etree.SubElement(parent, "SUBNODES", attrib={"COUNT": "1"})
+        parent = etree.SubElement(parent, "NODE", attrib={"TYPE": "PLAYLIST", "NAME": name})
+        return etree.SubElement(parent, "PLAYLIST", attrib={"ENTRIES": str(total), "TYPE": "LIST", "UUID": ""})
 
     def _backup(self):
         backup_path = os.path.join(self.traktor_path, "Backup", "Librarian")
@@ -71,7 +80,7 @@ class Library:
 
         if include_volume:
             volume = location.get("VOLUME")
-            full_path = volume + full_path # we cannot use os.path.join as the path is in the absolute form already
+            full_path = volume + full_path  # we cannot use os.path.join as the path is in the absolute form already
 
         return full_path
 
@@ -88,30 +97,3 @@ class Library:
         separator = "/:"
 
         return separator.join(path_parts).replace("%___%", "//")
-
-    def _set_logger(self):
-        """
-        Set up loggers for this class. There are two loggers in use. StreamLogger prints information on the screen with
-        the default level ERROR (INFO if the verbose flag is set). FileLogger logs INFO entries to the report.log file.
-        report.log is never purged, but information from new runs is appended to the end of the file.
-        :return:
-        """
-        self.logger = logging.getLogger(__name__)
-
-        stream_logger = logging.StreamHandler(sys.stdout)
-        if conf["verbose"]:
-            stream_logger.setLevel(logging.INFO)
-        else:
-            stream_logger.setLevel(logging.ERROR)
-
-        file_logger = logging.FileHandler('report.log')
-        file_logger.setLevel(logging.INFO)
-
-        self.logger.addHandler(file_logger)
-        self.logger.addHandler(stream_logger)
-        self.logger.setLevel(logging.DEBUG)
-
-        self.logger.info("="*80)
-        self.logger.info("TraktorLibrarian run on {}"
-                         .format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-        self.logger.info("="*80)
