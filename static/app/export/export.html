@@ -1,0 +1,40 @@
+<p class="back"><a href="#/" class="back">&#9664; BACK</a></p>
+
+<section class="export" ng-class="{ 'shrinked': isExporting }">
+
+    <p>Export your entire music collection and playlists to a selected destination</p>
+
+    <h2>Choose a destination</h2>
+
+    <ul class="drive-list">
+        <li ng-repeat="volume in volumes"
+            ng-class="{'selected': $parent.selectedDriveIndex === $index}"
+            ng-click="$parent.selectDrive($index)">
+            <div class="drive">
+                <img ng-src="/static/img/drive{{ $index }}.png" alt="" width="64" height="64"/>
+                {{ volume }}
+            </div>
+        </li>
+    </ul>
+
+
+    <button ng-click="export()">Export</button>
+
+</section>
+<section class="export-status" ng-if="isExporting">
+
+    <ul class="export-messages">
+        <li ng-repeat="message in messages">
+            <p ng-switch="message.action">
+                <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
+                <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
+                <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
+            </p>
+        </li>
+    </ul>
+
+    <div ng-if="isDone">
+        <p id="done-text">Done!<br/></p>
+        <p id="checkmark">✓</p>
+    </div>
+</section>

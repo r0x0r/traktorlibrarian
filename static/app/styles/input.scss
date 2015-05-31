@@ -17,7 +17,7 @@ button {
     outline: 0;
     padding: 10px 20px;
     display: inline;
-    color: #9fa8b0;
+    color: $active;
     font-weight: bold;
     text-shadow: 1px 1px #1f272b;
     border: 1px solid #1c252b;
@@ -43,12 +43,6 @@ button:hover {
 }
 
 button:active {
-    /*
-    background-position: 0 top;
-    position: relative;
-    top: 1px;
-    color: #fff;
-    padding: 6px 12px 4px; */
     background: #20282D; /* old browsers */
     background: -moz-linear-gradient(top, #20282D 3%, #252E34 51%, #222A30 100%); /* firefox */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#20282D), color-stop(51%,#252E34), color-stop(100%,#222A30)); /* webkit */

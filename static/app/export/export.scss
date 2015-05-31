@@ -1,0 +1,49 @@
+.export {
+  text-align: center;
+  width: 100%;
+  -webkit-transition: width 1s;
+  transition: width 1s;
+
+  &.shrinked {
+    float: left;
+    width: 400px;
+  }
+
+  .drive-list {
+    width: 400px;
+    margin: 10px auto 30px auto;
+
+    li {
+      display: inline-block;
+      padding: 20px;
+      margin: 10px;
+      text-align: center;
+      border: 5px solid transparent;
+      border-radius: 15px;
+
+      .drive {
+        display: inline-block;
+        width: 120px;
+
+        img {
+          margin-bottom: 10px
+        }
+      }
+
+      &:hover {
+        border-color: $active;
+        cursor: pointer;
+      }
+
+      &.selected {
+        border-color: $active;
+        background-color: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+}
+
+.export-list {
+  width: 390px;
+  float: right;
+}

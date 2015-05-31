@@ -1,3 +1,16 @@
+@import 'reset';
+@import 'colors';
+@import 'animation';
+@import 'input';
+@import '../loader/loader';
+@import '../landing/landing';
+@import '../export/export';
+@import '../clean/clean';
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-size: 14pt;
     font-weight: 100;
@@ -24,6 +37,12 @@ h1 {
     font-size: 26pt;
     font-family: bebas_neueregular, sans-serif;
     margin-bottom: 5px;
+}
+
+h2 {
+    margin: 23px 1em;
+    font-size: 26px;
+    text-transform: uppercase;
 }
 
 .subtitle {
