@@ -27,7 +27,10 @@ class Index:
     traktor_lib = None
 
     def GET(self):
-        traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
+        traktor_dir = "." #librarian.get_traktor_dir().replace("\\", "\\\\")
+        Index.traktor_lib = Library(traktor_dir)
+        conf["library_dir"] = traktor_dir
+
         return render.index(traktor_dir)
 
     def POST(self):
@@ -39,19 +42,28 @@ class Index:
             elif not librarian.library_exists(request["library_dir"]):
                 response = {"status": "error", "reason": "nolibrary"}
             else:
-                conf["library_dir"] = request["library_dir"]
+                #conf["library_dir"] = request["library_dir"]
                 conf["filelog"] = False # disable file logging
                 conf["verbose"] = False # disable verbose messages
                 response = {"status": "ok"}
 
             return json.dumps(response)
         elif request["action"] == "scan":
-            Index.traktor_lib = Library(conf["library_dir"])
-            Index.cleaner = Cleaner(Index.traktor_lib)
-            Index.cleaner.remove_duplicates()
+            if librarian.is_traktor_running():
+                response = {"status": "error", "reason": "running"}
+            elif not librarian.library_exists(request["library_dir"]):
+                response = {"status": "error", "reason": "nolibrary"}
+            else:
+                #conf["library_dir"] = request["library_dir"]
+                conf["filelog"] = False  # disable file logging
+                conf["verbose"] = False  # disable verbose messages
 
-            response = Index.cleaner.get_result()
-            response["status"] = "ok"
+                Index.traktor_lib = Library(conf["library_dir"])
+                Index.cleaner = Cleaner(Index.traktor_lib)
+                Index.cleaner.remove_duplicates()
+
+                response = Index.cleaner.get_result()
+                response["status"] = "ok"
 
             return json.dumps(response)
 
@@ -62,6 +74,33 @@ class Index:
                 response = {"status": "error"}
 
             return json.dumps(response)
+
+        elif request["action"] == "check_volumes":
+            volumes = os.listdir("/Volumes")
+            response = {"status": "ok", "volumes": volumes}
+
+            return json.dumps(response)
+
+        elif request["action"] == "export":
+            conf["remove_orphans"] = False
+            Index.exporter = Exporter(Index.traktor_lib, request["destination"])
+
+            Index.exporter.export()
+            response = {"status": "ok"}
+
+            return json.dumps(response)
+
+        elif request["action"] == "export_status":
+            messages = Index.exporter.get_messages()
+
+            if messages is None:
+                status = "end"
+            else:
+                status = "ok"
+
+            response = {"status": status, "messages": messages}
+            return json.dumps(response)
+
 
 
 def start_webserver(port, tries=0):
@@ -77,10 +116,13 @@ def start_webserver(port, tries=0):
         global http_port
         webapp = WebApplication(urls, globals())
         http_port = port
-        webapp.run(port = port)
-    except socket.error as e: # retry to start a server on a different port if the current pot is occupied
-        if tries > 10: # give up after 10th try
+        webapp.run(port=port)
+    except socket.error as e:  # retry to start a server on a different port if the current pot is occupied
+        if tries > 10:  # give up after 10th try
             raise e
         else:
             start_webserver(port + 1, tries + 1)
 
+
+if __name__ == "__main__":
+    start_webserver(8080)

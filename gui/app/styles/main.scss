@@ -1,11 +1,12 @@
 @import 'reset';
+@import 'fonts';
 @import 'colors';
 @import 'animation';
 @import 'input';
-@import '../loader/loader';
-@import '../landing/landing';
-@import '../export/export';
-@import '../clean/clean';
+@import '../components/loader/loader';
+@import '../components/landing/landing';
+@import '../components/export/export';
+@import '../components/clean/clean';
 
 * {
     box-sizing: border-box;

@@ -4,3 +4,7 @@
 dist*
 build
 report.log
+.sass-cache
+*.map
+static
+templates

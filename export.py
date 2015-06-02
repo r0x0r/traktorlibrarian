@@ -3,10 +3,11 @@ import sys
 import shutil
 import xml.etree.ElementTree as etree
 import logging
+import threading
 
 from unicodedata import normalize
 from copy import deepcopy
-from threading import Thread
+from Queue import Queue
 
 from logger import configure_logger
 from conf import conf
@@ -21,11 +22,13 @@ class Exporter:
         self.destination = os.path.join("/Volumes", volume)
         self.music_dir = os.path.join(self.destination, Exporter.MUSIC_DIR)
         self._entries = {}
+        self.message_queue = Queue()  # message queue for real time GUI updating
+        self.workers = []  # we store worker threads here
         self.logger = configure_logger(logging.getLogger(__name__))
 
+    def export(self):
         self._check_volume()
 
-    def export(self):
         tree = self.library.tree
         collection = tree.getroot().find("COLLECTION")
         self._start_copy_thread(deepcopy(collection))
@@ -40,27 +43,45 @@ class Exporter:
             location.attrib["VOLUMEID"] = self.volume
 
         if conf["remove_orphans"]:
-            self._remove_orphan_files()
+            self._start_remove_orphan_thread()
 
-        self._process_playlists()
+        self._start_process_playlists_thread()
+
+    def get_messages(self):
+        if not any([worker.is_alive() for worker in self.workers]):
+            return None
+
+        messages = []
+
+        while not self.message_queue.empty():
+            message = self.message_queue.get()
+            messages.append(message)
+
+        return messages
 
     def _check_volume(self):
         if not os.path.exists(self.destination):
             raise IOError("Volume {0} does not exist.".format(self.volume))
+
+    def _start_remove_orphan_thread(self):
+        worker = threading.Thread(target=self._remove_orphan_files)
+        self.workers.append(worker)
+        worker.start()
 
     def _remove_orphan_files(self):
         file_paths = self._entries.keys()
         orphans = set(os.listdir(self.music_dir)) - set(file_paths)
 
         for orphan in orphans:
-            print(u"Removing {0}".format(orphan))
+            self.logger.info(u"Removing {0}".format(orphan))
+            self.message_queue.put({"action": "delete", "item": orphan})
+
             os.remove(os.path.join(self.music_dir, orphan))
 
-    def _create_playlist_entry(self, parent, entry):
-        path = self.library.get_full_path(entry, True, True)
-
-        parent = etree.SubElement(parent, "ENTRY")
-        etree.SubElement(parent, "PRIMARYKEY", attrib={"KEY": path, "TYPE": "TRACK"})
+    def _start_process_playlists_thread(self):
+        worker = threading.Thread(target=self._process_playlists)
+        self.workers.append(worker)
+        worker.start()
 
     def _process_playlists(self):
         def recursive_scan(nodes, directory):
@@ -80,8 +101,6 @@ class Exporter:
                     name = node.attrib["NAME"]
                     if name == "_LOOPS" or name == "_RECORDINGS":
                         continue
-                    if name == "ALL":
-                        name = "All Tracks"
 
                     entries = self._get_playlist_entries(node)
                     self._export_playlist(entries, name, directory)
@@ -110,7 +129,14 @@ class Exporter:
         return entries
 
     def _export_playlist(self, entries, name, directory):
+        def create_playlist_entry(parent, entry):
+            path = self.library.get_full_path(entry, True, True)
+
+            parent = etree.SubElement(parent, "ENTRY")
+            etree.SubElement(parent, "PRIMARYKEY", attrib={"KEY": path, "TYPE": "TRACK"})
+
         self.logger.info(u"Exporting playlist {0} to directory {1}".format(name, directory))
+        self.message_queue.put({"action": "playlist", "item": name})
 
         tree = self.library.create_new()
         collection = tree.getroot().find("COLLECTION")
@@ -119,15 +145,15 @@ class Exporter:
 
         for entry in entries:
             collection.append(entry)
-            self._create_playlist_entry(playlist, entry)
+            create_playlist_entry(playlist, entry)
 
         name = self._replace_filename_char(name)
         full_path = os.path.join(directory, name + u".nml")
         tree.write(full_path, encoding="utf-8", xml_declaration=True)
 
     def _start_copy_thread(self, collection):
-        worker = Thread(target=self._copy_files, args=(collection, ))
-        #worker.daemon = True
+        worker = threading.Thread(target=self._copy_files, args=(collection, ))
+        self.workers.append(worker)
         worker.start()
 
     def _copy_files(self, collection):
@@ -146,7 +172,8 @@ class Exporter:
                     if os.path.exists(dest) and (os.stat(src).st_mtime - os.stat(dest).st_mtime) < 60:
                         continue
 
-                    print (u"Copying {}".format(file_name))
+                    self.logger.info(u"Copying {}".format(file_name))
+                    self.message_queue.put({"action": "copy", "item": file_name})
                     Exporter._copy(src, dest)
 
             except IOError as e:

@@ -4,7 +4,7 @@ import guiserver
 
 
 def start_ui(url):
-    webview.create_window("Traktor Librarian", url)
+    webview.create_window("Traktor Librarian", url, resizable=False)
 
 
 if __name__ == '__main__':

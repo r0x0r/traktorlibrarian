@@ -1,14 +1,14 @@
-'use strict';
-
 angular.module('librarian')
     .controller('ExportController', ['$scope', '$http', '$interval',
         function ($scope, $http, $interval) {
+          'use strict';
+
             var getVolumes = function() {
                 $http({
                     method: 'POST',
                     url: '/',
                     data: {
-                        action: "check_volumes"
+                        action: 'check_volumes'
                     }
                 }).success(function (data, status, headers, config) {
 
@@ -21,12 +21,12 @@ angular.module('librarian')
                     method: 'POST',
                     url: '/',
                     data: {
-                        action: "export_status"
+                        action: 'export_status'
                     }
                 }).success(function (data, status, headers, config) {
-                    if (data.status === "ok") {
+                    if (data.status === 'ok') {
                         $scope.messages = $scope.messages.concat(data.messages);
-                    } else if (data.status === "end") {
+                    } else if (data.status === 'end') {
                         $scope.isDone = true;
                         $interval.cancel(statusUpdatePromise);
                     }
@@ -43,18 +43,18 @@ angular.module('librarian')
             };
 
             $scope.export = function() {
-                var destination = "/Volumes/" + $scope.volumes[$scope.selectedDriveIndex];
+                var destination = '/Volumes/' + $scope.volumes[$scope.selectedDriveIndex];
                 $scope.isExporting = true;
 
                 $http({
                     method: 'POST',
                     url: '/',
                     data: {
-                        action: "export",
+                        action: 'export',
                         destination: destination
                     }
-                }).success(function (data, status, headers, config) {
-                    if (data.status == "ok") {
+                }).success(function (data) {
+                    if (data.status === 'ok') {
                         $interval.cancel(volumePromise);
                         statusUpdatePromise = $interval(getExportStatus, 1000, 0);
                     }

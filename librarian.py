@@ -46,9 +46,8 @@ def main():
             exporter.export()
 
     except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(1)
-
+        logger.error(e, exc_info=False)
+        #sys.exit(1)
 
 def is_traktor_running():
 

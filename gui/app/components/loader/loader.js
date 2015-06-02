@@ -1,7 +1,6 @@
-'use strict';
-
 angular.module('librarian')
     .directive('loader', function () {
+      'use strict';
 
         return {
             scope: {
@@ -12,6 +11,5 @@ angular.module('librarian')
             link: function($scope) {
                 console.log($scope.message);
             }
-
-        }
+        };
     });

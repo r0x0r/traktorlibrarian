@@ -1,8 +1,8 @@
-'use strict';
-
 angular.module('librarian')
     .controller('CleanController', ['$scope', '$rootScope', '$http',
         function ($scope, $rootScope, $http) {
+          'use strict';
+          
             $scope.loading = true;
 
             $http({
@@ -10,15 +10,15 @@ angular.module('librarian')
                 url: '/',
                 data: {
                     library_dir: $rootScope.libraryDir,
-                    action: "scan"
+                    action: 'scan'
                 }
             }).success(function(data, status, headers, config) {
 
-                $scope.dup_count = data.count;
+                $scope.dupCount = data.count;
                 $scope.duplicates = data.duplicates;
 
                 // Remove button initialization
-                $scope.removeButton = "Remove duplicates";
+                $scope.removeButton = 'Remove duplicates';
                 $scope.isProcessing = false;
 
                 $scope.view = 'finished';
