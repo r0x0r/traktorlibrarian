@@ -1,0 +1,9 @@
+{
+  "name": "gui",
+  "private": true,
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "angular": "~1.4.0",
+    "angular-route": "~1.4.0"
+  }
+}

@@ -1,0 +1,36 @@
+.landing {
+  width: 680px;
+  margin: 0 auto;
+
+  .action-box {
+    display: block;
+    width: 300px;
+    float: left;
+    margin: 20px;
+    padding: 10px;
+    text-align: center;
+    border: 5px solid transparent;
+    border-radius: 20px;
+
+
+    i {
+      font-size: 50px;
+    }
+
+    p {
+      margin: 10px auto;
+    }
+
+    &:link, &:visited {
+      color: white;
+      text-decoration: none;
+    }
+
+    &:hover {
+      border-color: white;
+      cursor: pointer;
+      background-color: rgba(0, 0, 0, 0.3);
+      opacity: 0.9;
+    }
+  }
+}

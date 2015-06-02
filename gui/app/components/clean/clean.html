@@ -1,0 +1,26 @@
+<loader ng-show="loading" message="'Scanning for duplicates'"></loader>
+
+<section id="finished" ng-hide="loading" ng-cloak>
+    <p><a href="#/" class="back">&#9664; BACK</a></p>
+    <div class="center">
+        <p id="done-text">Done!<br/></p>
+        <p id="checkmark">✓</p>
+        <p ng-hide="removed">{{dup_count}} duplicate<span ng-hide="dup_count == 1">s</span> found</p><br/>
+        <p ng-show="removed">{{dup_count}} duplicates removed</p><br/>
+
+        <p id="backup" ng-show="removed"
+           unselectable='off'
+           onselectstart=''>Library backup can be found at {{backup}}.</p><br/>
+
+
+        <button ng-hide="removed || dup_count == 0" ng-click="remove();"
+                ng-bind="removeButton" ng-disabled="isProcessing"></button>
+
+        <ul id="duplicates" ng-hide="removed">
+            <li ng-repeat="d in duplicates" class="duplicate-item">
+                <span class="old">{{d[0]}}</span><br/><span class="new">{{d[1]}}</span>
+            </li>
+        </ul>
+    </div>
+
+</section>
