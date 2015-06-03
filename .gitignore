@@ -8,3 +8,4 @@ report.log
 *.map
 static
 templates
+npm-debug.log
