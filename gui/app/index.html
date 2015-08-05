@@ -27,10 +27,22 @@ $def with(traktor_dir)
 unselectable='on'
 onselectstart='return false;'
 -->
-    <header>
-        <h1>Traktor Librarian</h1>
-        <p class="library-location">Library location: {{ libraryDir }}<i class="fa fa-gear"></i></p>
+    <header ng-controller="HeaderController">
+      <div class="header-container">
+        <h1 ng-class="{ 'with-back-button': isBackButtonVisible }"
+            ng-click="goToHome()">
+          <i class="fa fa-arrow-left back-button"></i><span>Traktor Librarian</span>
+        </h1>
+      </div>
+
+      <div class="library-location-container">
+        <span class="library-text">Library location:</span> <span class="library-dir">{{ libraryDir }}</span>
+        <button class="no-thrills-button"><i class="fa fa-gear"></i></button>
+      </div>
     </header>
+
+
+
 
     <div id="content" class="container" ng-view/>
 </body>

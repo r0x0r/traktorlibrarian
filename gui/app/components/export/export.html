@@ -1,6 +1,4 @@
-<p class="back"><a href="#/" class="back">&#9664; BACK</a></p>
-
-<section class="export" ng-class="{ 'shrinked': isExporting }">
+<section class="export" ng-if="!isExporting">
 
     <p>Export your entire music collection and playlists to a selected destination</p>
 
@@ -11,8 +9,8 @@
             ng-class="{'selected': $parent.selectedDriveIndex === $index}"
             ng-click="$parent.selectDrive($index)">
             <div class="drive">
-                <img ng-src="/static/img/drive{{ $index }}.png" alt="" width="64" height="64"/>
-                {{ volume }}
+                <img class="drive-icon" ng-src="/static/img/drive{{ $index }}.png" alt="" width="64" height="64"/>
+                <span class="drive-label">{{ volume }}</span>
             </div>
         </li>
     </ul>
@@ -23,18 +21,34 @@
 </section>
 <section class="export-status" ng-if="isExporting">
 
-    <ul class="export-messages">
-        <li ng-repeat="message in messages">
-            <p ng-switch="message.action">
-                <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
-                <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
-                <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
-            </p>
-        </li>
-    </ul>
+    <!--   -->
+    <loader ng-if='!isDone' message="'Hold on. Exporting your music collection'"></loader>
 
-    <div ng-if="isDone">
-        <p id="done-text">Done!<br/></p>
-        <p id="checkmark">✓</p>
+    <div class="center" ng-if="!isDone">
+      <!--
+      <ul class="export-messages">
+          <li ng-repeat="message in messages">
+              <p ng-switch="message.action">
+                  <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
+                  <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
+                  <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
+              </p>
+          </li>
+      </ul>
+      -->
+      <p class="status-message" ng-switch="message.action">
+        <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
+        <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
+        <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
+      </p>
+
+      <button ng-click="cancelExport()">Cancel</button>
+    </div>
+
+    <div ng-if="isDone" class="center">
+      <h2>Done!</h2>
+      <p id="checkmark">✓</p>
+
+      <a href="#/"><button><i class="fa fa-arrow-left"></i> Back</button></a>
     </div>
 </section>

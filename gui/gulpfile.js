@@ -140,6 +140,7 @@ gulp.task('watch', function () {
   gulp.watch('app/images/**/*', ['images']);
   gulp.watch('app/**/*.html', ['html']);
   gulp.watch('app/components/**/*.js', ['scripts']);
+  gulp.watch('app/components/**/*.scss', ['styles']);
   gulp.watch('app/styles/**/*.scss', ['styles']);
   gulp.watch('bower.json', ['wiredep']);
 });

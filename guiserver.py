@@ -1,7 +1,7 @@
 import os
 import sys
 import librarian
-import json
+import psutil
 
 from clean import Cleaner
 from export import Exporter
@@ -27,7 +27,7 @@ class Index:
     traktor_lib = None
 
     def GET(self):
-        traktor_dir = "." #librarian.get_traktor_dir().replace("\\", "\\\\")
+        traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
         Index.traktor_lib = Library(traktor_dir)
         conf["library_dir"] = traktor_dir
 
@@ -76,13 +76,15 @@ class Index:
             return json.dumps(response)
 
         elif request["action"] == "check_volumes":
-            volumes = os.listdir("/Volumes")
+            volumes = [p.mountpoint.split("/")[-1] for p in psutil.disk_partitions()
+                       if p.mountpoint != "/" and p.mountpoint.startswith("/Volumes")]
             response = {"status": "ok", "volumes": volumes}
 
             return json.dumps(response)
 
         elif request["action"] == "export":
             conf["remove_orphans"] = False
+            Index.traktor_lib = Library(conf["library_dir"])
             Index.exporter = Exporter(Index.traktor_lib, request["destination"])
 
             Index.exporter.export()

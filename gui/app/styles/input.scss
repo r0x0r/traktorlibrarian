@@ -124,4 +124,14 @@ input.cmn-toggle-round:checked + label:after {
     margin-left: 25px;
 }
 
+.no-thrills-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
 
+  &:hover {
+    cursor: pointer;
+    background: none;
+  }
+}

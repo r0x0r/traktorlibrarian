@@ -1,13 +1,6 @@
 .export {
   text-align: center;
   width: 100%;
-  -webkit-transition: width 1s;
-  transition: width 1s;
-
-  &.shrinked {
-    float: left;
-    width: 400px;
-  }
 
   .drive-list {
     width: 400px;
@@ -25,8 +18,13 @@
         display: inline-block;
         width: 120px;
 
-        img {
-          margin-bottom: 10px
+        .drive-icon {
+          display: block;
+          margin: 0 auto 10px auto;
+        }
+
+        .drive-label {
+          display: block;
         }
       }
 
@@ -46,4 +44,11 @@
 .export-list {
   width: 390px;
   float: right;
+}
+
+.status-message {
+  min-height: 1em;
+  margin: 0 auto 30px auto;
+  font-size: 12px;
+  font-style: italic;
 }

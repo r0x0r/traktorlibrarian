@@ -27,17 +27,60 @@ body {
 
 header {
     width: 100%;
-    padding: 30px;
+    margin-bottom: 100px;
     background: #333 url("../img/footer_lodyas.png");
-    box-shadow: 0px 3px 7px #222;
+    box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.05);
     position: fixed;
     z-index: 2;
+
+  .header-container {
+      padding: 30px 30px 20px 30px;
+  }
+
+  .library-location-container {
+    font-size: 14px;
+    padding: 6px;
+    background-color: rgba(59, 59, 59, 0.9);
+    text-align: right;
+    /* border-top: 1px solid rgba(0, 0, 0,0.07); */
+  }
 }
 
 h1 {
-    font-size: 26pt;
-    font-family: bebas_neueregular, sans-serif;
-    margin-bottom: 5px;
+  font-size: 26pt;
+  font-family: bebas_neueregular, sans-serif;
+  margin-bottom: 5px;
+  position: relative;
+
+  .back-button {
+    font-weight: 300;
+    margin-right: 18px;
+    font-size: 24px;
+    position: relative;
+    top: -4px;
+    opacity: 0;
+    -webkit-transition: opacity 0.5s;
+    transition: opacity 0.5s;
+  }
+
+  span {
+    position: absolute;
+    left: 0;
+    -webkit-transition: left 0.5s;
+    transition: left 0.5s;
+  }
+
+  &.with-back-button {
+    cursor: pointer;
+
+    i {
+      opacity: 1;
+    }
+
+    span {
+      left: 30px;
+    }
+  }
 }
 
 h2 {
@@ -77,69 +120,18 @@ section {
     -webkit-justify-content: center;
 }
 
-#processing {
-    padding-top: 100px;
+
+.library-text {
+  font-weight: 200;
+  opacity: 0.5;
 }
 
-#checkmark {
-    font-size: 52pt;
-    color: greenyellow;
-    margin: 30px auto;
-    padding: 0;
-    text-shadow: 3px 1px #666;
+.library-dir {
+  margin-right: 3px;
+  opacity: 0.5;
 }
 
-#done-text {
-    font-size: 24pt;
-    font-weight: 300;
-}
 
-#duplicates {
-    margin-top: 40px;
-}
-
-.duplicate-item {
-    margin-bottom: 15px;
-    font-size: 11pt;
-    margin-bottom: 7px;
-    padding-bottom: 7px;
-    border-bottom: 1px dashed rgba(255,255,255,0.1);
-
-}
-
-.old, .error {
-    color: indianred;
-}
-
-.new {
-    color: #2ecc71;
-}
-
-.old:before {
-    content: "\2716\0009";
-}
-
-.new:before {
-    content: "\2714\0009";
-}
-
-.back:link, .back:visited {
-    font-size: 14pt;
-    color: #9fa8b0;
-    text-decoration: none;
-    font-weight: 300;
-    position: relative;
-    top: -20px;
-    left: -10px;
-}
-
-.back:hover {
-    color: white;
-}
-
-#backup {
-    -webkit-user-select: text;
-    user-select: text;
-    font-size: 10pt;
-    color: rgba(255,255,255,0.6);
+a:link, a:visited {
+  text-decoration: none;
 }

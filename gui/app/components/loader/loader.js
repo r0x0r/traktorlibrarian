@@ -7,7 +7,7 @@ angular.module('librarian')
                 message: '='
             },
             restrict: 'E',
-            templateUrl: '/static/app/loader/loader.html',
+            templateUrl: '/static/components/loader/loader.html',
             link: function($scope) {
                 console.log($scope.message);
             }

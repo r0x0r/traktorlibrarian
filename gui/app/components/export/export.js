@@ -1,67 +1,92 @@
 angular.module('librarian')
-    .controller('ExportController', ['$scope', '$http', '$interval',
-        function ($scope, $http, $interval) {
+    .controller('ExportController', ['$scope', '$http', '$interval', '$rootScope',
+        function ($scope, $http, $interval, $rootScope) {
           'use strict';
 
-            var getVolumes = function() {
-                $http({
-                    method: 'POST',
-                    url: '/',
-                    data: {
-                        action: 'check_volumes'
-                    }
-                }).success(function (data, status, headers, config) {
+          $rootScope.isBackButtonVisible = true;
 
-                    $scope.volumes = data.volumes;
-                });
-            };
+          var statusUpdatePromise;
 
-            var getExportStatus = function() {
-                $http({
-                    method: 'POST',
-                    url: '/',
-                    data: {
-                        action: 'export_status'
-                    }
-                }).success(function (data, status, headers, config) {
-                    if (data.status === 'ok') {
-                        $scope.messages = $scope.messages.concat(data.messages);
-                    } else if (data.status === 'end') {
-                        $scope.isDone = true;
-                        $interval.cancel(statusUpdatePromise);
-                    }
-                });
-            };
+          var getVolumes = function() {
+              $http({
+                  method: 'POST',
+                  url: '/',
+                  data: {
+                      action: 'check_volumes'
+                  }
+              }).success(function (data, status, headers, config) {
 
-            var volumePromise = $interval(getVolumes, 1000, 0),
-                statusUpdatePromise;
+                  $scope.volumes = data.volumes;
+              });
+          };
 
-            $scope.messages = [];
+          var getExportStatus = function() {
+              $http({
+                  method: 'POST',
+                  url: '/',
+                  data: {
+                      action: 'export_status'
+                  }
+              }).success(function (data) {
+                  if (data.status === 'ok') {
+                      messages = messages.concat(data.messages);
+                  } else if (data.status === 'end') {
+                      $scope.isDone = true;
+                      $interval.cancel(statusUpdatePromise);
+                      $interval.cancel(messagePromise);
+                  }
+              });
+          };
 
-            $scope.selectDrive = function(index) {
-                $scope.selectedDriveIndex = index;
-            };
+          var messages = [];
 
-            $scope.export = function() {
-                var destination = '/Volumes/' + $scope.volumes[$scope.selectedDriveIndex];
-                $scope.isExporting = true;
+          var displayMessage = function() {
+            var message = messages.shift();
 
-                $http({
-                    method: 'POST',
-                    url: '/',
-                    data: {
-                        action: 'export',
-                        destination: destination
-                    }
-                }).success(function (data) {
-                    if (data.status === 'ok') {
-                        $interval.cancel(volumePromise);
-                        statusUpdatePromise = $interval(getExportStatus, 1000, 0);
-                    }
-                });
-            };
+            if (message)
+              $scope.message = message;
+          }
 
+          var volumePromise = $interval(getVolumes, 1000, 0),
+              messagePromise = $interval(displayMessage, 300 ,0);
 
+          $scope.selectDrive = function(index) {
+              $scope.selectedDriveIndex = index;
+          };
+
+          $scope.export = function() {
+              var destination = '/Volumes/' + $scope.volumes[$scope.selectedDriveIndex];
+              $scope.isExporting = true;
+
+              $http({
+                  method: 'POST',
+                  url: '/',
+                  data: {
+                      action: 'export',
+                      destination: destination
+                  }
+              }).success(function (data) {
+                  if (data.status === 'ok') {
+                      $interval.cancel(volumePromise);
+                      statusUpdatePromise = $interval(getExportStatus, 1000, 0);
+                  }
+              });
+          };
+
+          $scope.cancelExport = function () {
+            $http({
+              method: 'POST',
+              url: '/',
+              data: {
+                action: 'cancel'
+              }
+            }).success(function (data) {
+              if (data.status === 'ok') {
+                $interval.cancel(volumePromise);
+                statusUpdatePromise = $interval(getExportStatus, 1000, 0);
+              }
+            });
+          };
 
         }
     ]);

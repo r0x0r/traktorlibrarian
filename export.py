@@ -168,6 +168,10 @@ class Exporter:
 
             try:
                 if os.path.exists(src):
+                    if file_name.startswith("King"):x§§
+                        print file_name
+                        pass
+
                     # skip existing unmodified files
                     if os.path.exists(dest) and (os.stat(src).st_mtime - os.stat(dest).st_mtime) < 60:
                         continue
@@ -188,6 +192,7 @@ class Exporter:
         @param buffer_size:    Buffer size to use during copy
         '''
         #    Check to make sure destination directory exists. If it doesn't create the directory
+
         try:
             dstParent, dstFileName = os.path.split(dst)
             if(not(os.path.exists(dstParent))):
