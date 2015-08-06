@@ -168,7 +168,7 @@ class Exporter:
 
             try:
                 if os.path.exists(src):
-                    if file_name.startswith("King"):x§§
+                    if file_name.startswith(u"King"):
                         print file_name
                         pass
 

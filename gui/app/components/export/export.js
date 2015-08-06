@@ -4,6 +4,7 @@ angular.module('librarian')
           'use strict';
 
           $rootScope.isBackButtonVisible = true;
+          $scope.volumes = $rootScope.volumes;
 
           var statusUpdatePromise;
 
@@ -15,7 +16,6 @@ angular.module('librarian')
                       action: 'check_volumes'
                   }
               }).success(function (data, status, headers, config) {
-
                   $scope.volumes = data.volumes;
               });
           };
