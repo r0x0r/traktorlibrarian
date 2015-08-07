@@ -48,6 +48,16 @@ class Index:
                 response = {"status": "ok"}
 
             return json.dumps(response)
+
+        elif request["action"] == "initialize":
+            Index.traktor_lib = Library(conf["library_dir"])
+            volumes = [p.mountpoint.split("/")[-1] for p in psutil.disk_partitions()
+                             if p.mountpoint != "/" and p.mountpoint.startswith("/Volumes")]
+
+            response = {"status": "ok", "volumes": volumes}
+
+            return json.dumps(response)
+
         elif request["action"] == "scan":
             if librarian.is_traktor_running():
                 response = {"status": "error", "reason": "running"}
@@ -58,7 +68,6 @@ class Index:
                 conf["filelog"] = False  # disable file logging
                 conf["verbose"] = False  # disable verbose messages
 
-                Index.traktor_lib = Library(conf["library_dir"])
                 Index.cleaner = Cleaner(Index.traktor_lib)
                 Index.cleaner.remove_duplicates()
 
@@ -84,7 +93,6 @@ class Index:
 
         elif request["action"] == "export":
             conf["remove_orphans"] = False
-            Index.traktor_lib = Library(conf["library_dir"])
             Index.exporter = Exporter(Index.traktor_lib, request["destination"])
 
             Index.exporter.export()
