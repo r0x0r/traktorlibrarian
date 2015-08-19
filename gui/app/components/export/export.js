@@ -5,6 +5,7 @@ angular.module('librarian')
 
           $rootScope.isBackButtonVisible = true;
           $scope.volumes = $rootScope.volumes;
+          $scope.removeOrphans = false;
 
           var statusUpdatePromise;
 
@@ -63,7 +64,8 @@ angular.module('librarian')
                   url: '/',
                   data: {
                       action: 'export',
-                      destination: destination
+                      destination: destination,
+                      remove_orphans: $scope.removeOrphans
                   }
               }).success(function (data) {
                   if (data.status === 'ok') {
