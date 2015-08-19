@@ -1,6 +1,6 @@
 angular.module('librarian')
-    .controller('ExportController', ['$scope', '$http', '$interval', '$rootScope',
-        function ($scope, $http, $interval, $rootScope) {
+    .controller('ExportController', ['$scope', '$http', '$interval', '$rootScope', '$location',
+        function ($scope, $http, $interval, $rootScope, $location) {
           'use strict';
 
           $rootScope.isBackButtonVisible = true;
@@ -86,6 +86,14 @@ angular.module('librarian')
                 statusUpdatePromise = $interval(getExportStatus, 1000, 0);
               }
             });
+          };
+
+          $scope.goToHome = function() {
+            $scope.cancelExport();
+
+            if ($location.path() !== '/') {
+              $location.path('/');
+            }
           };
 
         }

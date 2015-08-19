@@ -27,8 +27,9 @@ angular.module('librarian', ['ngRoute'])
 .controller('HeaderController', [
     '$scope',
     '$location',
+    '$http',
 
-    function($scope, $location) {
+    function($scope, $location, $http) {
       'use strict';
 
        $scope.goToHome = function() {
@@ -36,5 +37,17 @@ angular.module('librarian', ['ngRoute'])
            $location.path('/');
          }
        };
+
+      $scope.selectLibrary = function() {
+        $http({
+          method: 'POST',
+          url: '/',
+          data: {
+            action: 'open_file_dialog'
+          }
+        }).success(function (data) {
+          console.log(data);
+        });
+      }
     }
   ]);

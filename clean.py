@@ -58,6 +58,13 @@ class Cleaner:
 
                 self._duplicates += len(remove_entries)
 
+            elif entry_keep is None:
+                artist = remove_entries[0].get("ARTIST")
+                title = remove_entries[0].get("TITLE")
+
+                self.logger.info(u"Duplicates of \"{} - {}\" not removed, because none of the source files exist"
+                                 .format(artist, title))
+
         # And now get down to processing playlists
         self.process_playlists()
         collection.set("ENTRIES", str(len(collection)))
@@ -89,13 +96,16 @@ class Cleaner:
         exist_entries = []
 
         for entry in entries:
-            path = self.library.get_full_path(entry, sys.platform == "win32")
+            path = self.library.get_full_path(entry, True)
+
+            if sys.platform == "darwin":
+                path = os.path.join("/Volumes", path)
 
             if os.path.exists(path):
                 exist_entries.append(entry)
 
         if not exist_entries:
-            return (None, None)
+            return (None, entries)
 
         # get entry with the most number of cue points
         entry_keep = max([(getlen_cuepoints(e), e) for e in exist_entries], key=operator.itemgetter(0))[1]

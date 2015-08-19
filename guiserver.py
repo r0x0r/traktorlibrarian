@@ -11,6 +11,7 @@ from conf import *
 abspath = os.path.dirname(__file__)
 sys.path.append(abspath)
 import web
+import webview
 
 os.environ["SCRIPT_NAME"] = ""
 os.environ["REAL_SCRIPT_NAME"] = ""
@@ -102,6 +103,14 @@ class Index:
 
             response = {"status": status, "messages": messages}
             return json.dumps(response)
+
+        elif request["action"] == "open_file_dialog":
+            folder = webview.open_file_dialog(True)
+
+            response = {"status": "ok", "folder": folder}
+
+            return json.dumps(response)
+
 
 
 
