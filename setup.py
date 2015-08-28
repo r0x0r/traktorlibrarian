@@ -5,15 +5,18 @@ Usage:
     python setup.py py2app
 """
 import sys
+import os
 from setuptools import setup
 
+sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python')
+os.chdir('/Users/roman/Code/traktorlibrarian')
 
 APP = ['Traktor Librarian.py']
 DATA_FILES = [('', ['static']), ('', ['templates'])]
 OPTIONS = {'argv_emulation': False,
            'strip': True,
            'iconfile': 'icon.icns',
-           'includes': ['WebKit', 'Foundation']}
+           'includes': ['WebKit', 'Foundation', 'webview']}
 
 if sys.platform == "darwin":
     setup(

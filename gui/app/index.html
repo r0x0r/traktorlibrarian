@@ -22,7 +22,7 @@ $def with(traktor_dir)
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body ng-init="libraryDir = '$traktor_dir'">
+<body ng-init="traktorDir = '$traktor_dir'">
 <!--
 unselectable='on'
 onselectstart='return false;'
@@ -36,11 +36,13 @@ onselectstart='return false;'
       </div>
 
       <div class="library-location-container">
-        <span class="library-text">Library location:</span> <span class="library-dir">{{ libraryDir }}</span>
-        <button class="no-thrills-button" ng-click="selectLibrary()"><i class="fa fa-gear"></i></button>
+        <button class="no-thrills-button" ng-click="selectLibrary()">
+          <span class="library-text">Library location:</span> <span class="library-dir">{{ traktorDir }}</span>
+          <i class="fa fa-gear"></i>
+        </button>
       </div>
+      <div id="error">{{ error }}</div>
     </header>
-
 
 
 

@@ -48,8 +48,7 @@ else:
 
 
 def open_file_dialog(open_folder=False):
-    print gui
-    gui.open_file_dialog(open_folder)
+    return gui.open_file_dialog(open_folder)
 
 
 def load_url(url):

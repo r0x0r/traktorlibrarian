@@ -23,11 +23,15 @@ class Library:
         Write collection XML file to the disk performing a backup of the existing collection first
         :return:
         """
+        backup_path = None
+
         if path is None:
-            self._backup()
+            backup_path = self._backup()
             path = self.library_path
 
         self.tree.write(path, encoding="utf-8", xml_declaration=True)
+
+        return backup_path
 
     def create_new(self):
         version = self.tree.getroot().attrib["VERSION"]
@@ -58,6 +62,8 @@ class Library:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         destination = os.path.join(backup_path, "collection_{}.nml".format(timestamp))
         shutil.copy(self.library_path, destination)
+
+        return backup_path
 
     def get_full_path(self, entry, include_volume=False, traktorize=False):
         """

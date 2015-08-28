@@ -53,7 +53,7 @@ def is_traktor_running():
 
     if sys.platform == "darwin":
         try:
-            subprocess.check_output(['pgrep', 'Traktor'])
+            subprocess.check_output(['pgrep', '^Traktor$'])
             return True
         except subprocess.CalledProcessError as e:
             return False

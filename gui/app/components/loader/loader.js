@@ -9,7 +9,6 @@ angular.module('librarian')
             restrict: 'E',
             templateUrl: '/static/components/loader/loader.html',
             link: function($scope) {
-                console.log($scope.message);
             }
         };
     });

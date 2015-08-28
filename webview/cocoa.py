@@ -127,7 +127,7 @@ def open_file_dialog(open_folder):
 
     if openDlg.runModalForDirectory_file_(None, None) == NSOKButton:
         files = openDlg.filenames()
-        return files
+        return list(files)
     else:
         return None
 

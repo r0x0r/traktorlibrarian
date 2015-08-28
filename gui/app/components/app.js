@@ -46,7 +46,23 @@ angular.module('librarian', ['ngRoute'])
             action: 'open_file_dialog'
           }
         }).success(function (data) {
-          console.log(data);
+
+          if(data.status == "ok") {
+            $scope.traktorDir = data.traktor_dir;
+
+            $http({
+              method: 'POST',
+              url: '/',
+              data: {
+                action: 'initialize'
+              }
+            }).success(function (data, status, headers, config) {
+
+              $rootScope.volumes = data.volumes;
+            });
+          } else if (data.status == "error") {
+            $scope.error = data.message;
+          }
         });
       }
     }
