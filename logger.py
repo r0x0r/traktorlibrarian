@@ -1,9 +1,11 @@
 __author__ = 'roman'
 import sys
 import logging
+from logging.handlers import SysLogHandler
 
 from datetime import datetime
 from conf import conf
+
 
 
 def configure_logger(logger):
@@ -13,23 +15,33 @@ def configure_logger(logger):
     report.log is never purged, but information from new runs is appended to the end of the file.
     :return:
     """
+    def _exception_hook(excType, excValue, traceback, logger=logger):
+        logger.error("", exc_info=(excType, excValue, traceback))
+
     stream_logger = logging.StreamHandler(sys.stdout)
-    if conf["verbose"]:
-        stream_logger.setLevel(logging.INFO)
-    else:
-        stream_logger.setLevel(logging.ERROR)
-
+    stream_logger.setLevel(conf["verbose"])
     logger.addHandler(stream_logger)
-    logger.setLevel(logging.DEBUG)
 
-    if conf["filelog"]:
-        file_logger = logging.FileHandler('report.log')
+    if conf["verbose"] == logging.DEBUG:
+        syslog_logger = SysLogHandler()
+        syslog_logger.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter("Traktor Librarian: [%(name)s]  %(message)s")
+        syslog_logger.setFormatter(formatter)
+
+        logger.addHandler(syslog_logger)
+        sys.excepthook = _exception_hook
+
+    if "filelog" in conf and conf["filelog"]:
+        file_logger = logging.FileHandler("report.log")
         file_logger.setLevel(logging.INFO)
 
         logger.addHandler(file_logger)
 
         logger.info("="*80)
-        logger.info("TraktorLibrarian run on {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        logger.info("TraktorLibrarian run on {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         logger.info("="*80)
+
+    logger.level = conf["verbose"]
 
     return logger

@@ -3,9 +3,9 @@
   width: 100%;
 
   .drive-container {
-    width: 400px;
+    width: 700px;
     min-height: 163px;
-    margin: 10px auto 30px auto;
+    margin: -20px auto 30px auto;
   }
 
   .drive-list {
@@ -60,10 +60,28 @@
   margin: 0 auto;
   width: 500px
 }
+
 .label {
   display: inline-block;
   margin-right: 15px;
 }
+
+.subnote {
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.please-insert {
+  display: table-cell;
+  vertical-align: middle;
+  height: 163px;
+  width: 700px;
+  margin: -20px auto 30px auto;
+  text-align: center;
+  font-style: oblique;
+}
+
+
 /*
 .checkbox {
   width: 80px;

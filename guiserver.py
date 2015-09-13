@@ -3,10 +3,12 @@ import sys
 import librarian
 import psutil
 import threading
+import logging
 
 from clean import Cleaner
 from export import Exporter
 from library import Library
+from logger import configure_logger
 from conf import *
 
 abspath = os.path.dirname(__file__)
@@ -29,55 +31,56 @@ class Index:
     traktor_lib = None
 
     def GET(self):
+        conf["filelog"] = False  # disable file logging
+        conf["debug"] = True  # disable verbose messages
+        Index.logger = configure_logger(logging.getLogger(__name__))
+
         traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
-        #Index.traktor_lib = Library(traktor_dir)
         conf["library_dir"] = traktor_dir
+        Index.logger.debug("Landing view. Traktor directory: " + traktor_dir)
 
         return render.index(traktor_dir)
 
     def POST(self):
         request = json.loads(web.data())
 
-        if request["action"] == "check":
+        if request["action"] == "initialize":
             if librarian.is_traktor_running():
-                response = {"status": "error", "reason": "running"}
-            elif not librarian.library_exists(request["library_dir"]):
-                response = {"status": "error", "reason": "nolibrary"}
+                response = {"status": "error", "message": "Traktor is running. Please quit it first."}
             else:
-                #conf["library_dir"] = request["library_dir"]
-                conf["filelog"] = False  # disable file logging
-                conf["verbose"] = False  # disable verbose messages
+                if Index.traktor_lib is None:
+                    Index.library_semaphore = threading.Semaphore(0)
+                    Index.traktor_lib = Library(conf["library_dir"])
+                    Index.library_semaphore.release()
+
                 response = {"status": "ok"}
+
+            volumes = self._get_volumes()
+            response["volumes"] = volumes
 
             return json.dumps(response)
 
-        elif request["action"] == "initialize":
-
-            if Index.traktor_lib is None:
-                Index.library_semaphore = threading.Semaphore(0)
-                Index.traktor_lib = Library(conf["library_dir"])
-                Index.library_semaphore.release()
-
-            volumes = [p.mountpoint.split("/")[-1] for p in psutil.disk_partitions()
-                             if p.mountpoint != "/" and p.mountpoint.startswith("/Volumes")]
-
-            response = {"status": "ok", "volumes": volumes}
+        elif request["action"] == "check":
+            if librarian.is_traktor_running():
+                response = {"status": "error", "message": "Traktor is running. Please quit it first."}
+            else:
+                response = {"status": "ok"}
 
             return json.dumps(response)
 
         elif request["action"] == "scan":
             if librarian.is_traktor_running():
-                response = {"status": "error", "reason": "running"}
+                response = {"status": "error", "message": "Traktor is running. Please quit it first."}
             else:
-                #conf["library_dir"] = request["library_dir"]
-                conf["filelog"] = False  # disable file logging
-                conf["verbose"] = False  # disable verbose messages
+                if Index.library_semaphore is None or Index.traktor_lib is None:
+                    Index.traktor_lib = Library(conf["library_dir"])
 
                 Index.library_semaphore.acquire()
                 Index.cleaner = Cleaner(Index.traktor_lib)
                 Index.library_semaphore.release()
 
                 Index.cleaner.remove_duplicates()
+                self.logger.debug(u"Duplicate removal complete")
 
                 response = Index.cleaner.get_result()
                 response["status"] = "ok"
@@ -93,17 +96,31 @@ class Index:
             return json.dumps(response)
 
         elif request["action"] == "check_volumes":
-            volumes = [p.mountpoint.split("/")[-1] for p in psutil.disk_partitions()
-                       if p.mountpoint != "/" and p.mountpoint.startswith("/Volumes")]
+            volumes = self._get_volumes()
             response = {"status": "ok", "volumes": volumes}
 
             return json.dumps(response)
 
         elif request["action"] == "export":
-            conf["remove_orphans"] = False
-            Index.exporter = Exporter(Index.traktor_lib, request["destination"])
+            if librarian.is_traktor_running():
+                response = {"status": "error", "message": "Please quit it first."}
+            else:
+                conf["remove_orphans"] = request["remove_orphans"]
 
-            Index.exporter.export()
+                if Index.library_semaphore is None or Index.traktor_lib is None:
+                    Index.traktor_lib = Library(conf["library_dir"])
+
+                Index.library_semaphore.acquire()
+                Index.exporter = Exporter(Index.traktor_lib, request["destination"])
+                Index.library_semaphore.release()
+
+                Index.exporter.export()
+                response = {"status": "ok"}
+
+            return json.dumps(response)
+
+        elif request["action"] == "cancel":
+            Index.exporter.cancel()
             response = {"status": "ok"}
 
             return json.dumps(response)
@@ -120,15 +137,22 @@ class Index:
             return json.dumps(response)
 
         elif request["action"] == "open_file_dialog":
-            traktor_dir = webview.open_file_dialog(True)[0]
+            directory = webview.open_file_dialog(True)[0]
+            response = {"status": "ok", "directory": directory}
 
-            if librarian.library_exists(traktor_dir):
-                conf["library_dir"] = traktor_dir
-                response = {"status": "ok", "traktor_dir": traktor_dir}
-            else:
-                response = {"status": "error", "message": "Traktor library not found in {}".format(traktor_dir)}
+            if "traktor_check" in request.keys() and request["traktor_check"]:
+                if librarian.library_exists(directory):
+                    conf["library_dir"] = directory
+                else:
+                    response = {"status": "error", "message": "Traktor library not found in {}".format(directory)}
 
             return json.dumps(response)
+
+    def _get_volumes(self):
+        volumes = [p.mountpoint.split("/")[-1] for p in psutil.disk_partitions()
+                   if p.mountpoint != "/" and p.mountpoint.startswith("/Volumes") and "rw" in p.opts]
+
+        return volumes
 
 
 def start_webserver(port, tries=0):
@@ -138,7 +162,6 @@ def start_webserver(port, tries=0):
         def run(self, port=8080, *middleware):
             func = self.wsgifunc(*middleware)
             return web.httpserver.runsimple(func, ('localhost', port))
-
 
     try:
         global http_port

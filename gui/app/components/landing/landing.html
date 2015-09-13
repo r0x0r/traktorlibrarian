@@ -1,30 +1,16 @@
-
-<section class="center"
-         ng-file-drop="onFileSelect(files)"
-         ng-file-drag-over-class="optional-css-class-name-or-function">
-
+<section class="center">
     <div class="landing">
-      <a href="#/export" class="action-box">
+      <button ng-disabled="!$root.traktorDir || $root.error" class="no-thrills-button action-box" ng-click="goTo('export')">
           <i class="fa fa-arrow-circle-o-down"></i>
           <h2>Export</h2>
 
           <p>Export your music collection to a USB drive</p>
-      </a>
+      </button>
 
-      <a href="#/clean" class="action-box">
+      <button ng-disabled="!$root.traktorDir || $root.error" class="no-thrills-button action-box" ng-click="goTo('clean')">
           <i class="fa fa-copy"></i>
           <h2>Clean</h2>
           <p>Clean your music collection from duplicates</p>
-      </a>
+      </button>
     </div>
-    <!--
-    <form ng-submit="scan()">
-        Traktor library location<br/>
-        <input type="text" id="library-dir" ng-model="library_dir" value="$traktor_dir" tabindex="1"/>
-        <button tabindex="2">Scan</button>  <br/>
-    </form>
-
-    <p ng-show="error" class="error" ng-bind="error" ng-cloak/>
-    -->
-
 </section>

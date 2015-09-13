@@ -6,6 +6,9 @@ angular.module('librarian')
           $rootScope.isBackButtonVisible = true;
           $scope.volumes = $rootScope.volumes;
           $scope.removeOrphans = false;
+          $scope.selectedDriveIndex = -1;
+          $scope.cancelled = false;
+          $scope.destination = "";
 
           var statusUpdatePromise;
 
@@ -16,8 +19,9 @@ angular.module('librarian')
                   data: {
                       action: 'check_volumes'
                   }
-              }).success(function (data, status, headers, config) {
-                  $scope.volumes = data.volumes;
+              }).then(function (response) {
+                $scope.volumes = response.data.volumes;
+                console.log($scope.volumes);
               });
           };
 
@@ -28,10 +32,10 @@ angular.module('librarian')
                   data: {
                       action: 'export_status'
                   }
-              }).success(function (data) {
-                  if (data.status === 'ok') {
-                      messages = messages.concat(data.messages);
-                  } else if (data.status === 'end') {
+              }).then(function (response) {
+                  if (response.data.status === 'ok') {
+                      messages = messages.concat(response.data.messages);
+                  } else if (response.data.status === 'end') {
                       $scope.isDone = true;
                       $interval.cancel(statusUpdatePromise);
                       $interval.cancel(messagePromise);
@@ -53,45 +57,55 @@ angular.module('librarian')
 
           $scope.selectDrive = function(index) {
               $scope.selectedDriveIndex = index;
+              $scope.destination = $scope.volumes[$scope.selectedDriveIndex];
           };
 
+          $scope.toggleOrphans = function() {
+            $scope.removeOrphans = !$scope.removeOrphans;
+          }
+
           $scope.export = function() {
-              var destination = '/Volumes/' + $scope.volumes[$scope.selectedDriveIndex];
               $scope.isExporting = true;
+              $interval.cancel(volumePromise);
 
               $http({
                   method: 'POST',
                   url: '/',
                   data: {
                       action: 'export',
-                      destination: destination,
+                      destination: $scope.destination,
                       remove_orphans: $scope.removeOrphans
                   }
-              }).success(function (data) {
-                  if (data.status === 'ok') {
-                      $interval.cancel(volumePromise);
+              }).then(function (response) {
+                  if (response.data.status === 'ok') {
                       statusUpdatePromise = $interval(getExportStatus, 1000, 0);
+                  } else if(response.data.status == "error") {
+                    $rootScope.error = true;
+                    $rootScope.errorMessage = response.data.message;
                   }
               });
           };
 
           $scope.cancelExport = function () {
+            $scope.cancelled = true;
+            $interval.cancel(statusUpdatePromise);
+
             $http({
               method: 'POST',
               url: '/',
               data: {
                 action: 'cancel'
               }
-            }).success(function (data) {
-              if (data.status === 'ok') {
-                $interval.cancel(volumePromise);
-                statusUpdatePromise = $interval(getExportStatus, 1000, 0);
+            }).then(function (response) {
+              if (response.data.status === 'ok') {
+                $scope.goToHome();
               }
             });
           };
 
           $scope.goToHome = function() {
-            $scope.cancelExport();
+            if(!$scope.cancelled)
+              $scope.cancelExport();
 
             if ($location.path() !== '/') {
               $location.path('/');

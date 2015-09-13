@@ -20,7 +20,6 @@ from export import Exporter
 from library import Library
 from logger import configure_logger
 
-conf["filelog"] = True
 logger = configure_logger(logging.getLogger(__name__))
 
 
@@ -159,6 +158,7 @@ def parse_export(args):
 
 
 if __name__ == '__main__':
+    conf["filelog"] = True
 
     if parse_arguments():
         main()

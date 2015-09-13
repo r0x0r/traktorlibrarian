@@ -1,7 +1,8 @@
 <section class="export" ng-if="!isExporting">
-
-    <p>Export your entire music collection and playlists to a selected destination</p>
-
+    <div class="margin-bottom-large">
+      <p>Export your entire music collection and playlists to a selected destination.</p>
+      <p class="subnote">Note: the exported collection will work only with Mac version of Traktor</p>
+    </div>
     <h2>Choose a destination</h2>
 
     <div class="drive-container">
@@ -16,8 +17,13 @@
           </li>
       </ul>
 
-      <input type="checkbox" value="None" name="check" ng-model="removeOrphans"/> Remove orphans
+      <p ng-if="!volumes || volumes.length == 0" class="please-insert">Please insert a USB drive</p>
 
+      <fieldset ng-if="volumes.length > 0">
+        <input id="orphan-checkbox"
+               type="checkbox" value="None" name="check"  ng-click="toggleOrphans()"/>
+        <label for="orphan-checkbox" title="Remove tracks at the destination that are not present in the Traktor library">Remove orphan tracks</label>
+      </fieldset>
 <!--
       <div class="checkbox-container">
         <div class="label">Remove files not in the library at the destination</div>
@@ -30,26 +36,15 @@
       -->
 
     </div>
-    <button ng-click="export()">Export</button>
+    <button ng-click="export()" ng-disabled="!destination">Export</button>
 
 </section>
 <section class="export-status" ng-if="isExporting">
 
-    <!--   -->
     <loader ng-if='!isDone' message="'Hold on. Exporting your music collection'"></loader>
 
     <div class="center" ng-if="!isDone">
-      <!--
-      <ul class="export-messages">
-          <li ng-repeat="message in messages">
-              <p ng-switch="message.action">
-                  <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
-                  <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
-                  <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
-              </p>
-          </li>
-      </ul>
-      -->
+
       <p class="status-message" ng-switch="message.action">
         <span ng-switch-when="copy">Copying <strong>{{ message.item }}</strong></span>
         <span ng-switch-when="delete">Deleting <strong>{{ message.item }}</strong></span>
@@ -60,8 +55,8 @@
     </div>
 
     <div ng-if="isDone" class="center">
-      <h2>Done!</h2>
-      <p id="checkmark">✓</p>
+      <p class="checkmark">✓</p>
+      <h2 class="done">Done!</h2>
 
       <button ng-click="goToHome()"><i class="fa fa-arrow-left"></i> Back</button>
     </div>

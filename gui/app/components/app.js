@@ -28,8 +28,9 @@ angular.module('librarian', ['ngRoute'])
     '$scope',
     '$location',
     '$http',
+    '$rootScope',
 
-    function($scope, $location, $http) {
+    function($scope, $location, $http, $rootScope) {
       'use strict';
 
        $scope.goToHome = function() {
@@ -43,12 +44,13 @@ angular.module('librarian', ['ngRoute'])
           method: 'POST',
           url: '/',
           data: {
-            action: 'open_file_dialog'
+            action: 'open_file_dialog',
+            traktor_check: true
           }
         }).success(function (data) {
 
           if(data.status == "ok") {
-            $scope.traktorDir = data.traktor_dir;
+            $rootScope.traktorDir = data.directory;
 
             $http({
               method: 'POST',
@@ -61,7 +63,8 @@ angular.module('librarian', ['ngRoute'])
               $rootScope.volumes = data.volumes;
             });
           } else if (data.status == "error") {
-            $scope.error = data.message;
+            $rootScope.error = true;
+            $rootScope.errorMessage = data.message;
           }
         });
       }

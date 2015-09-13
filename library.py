@@ -1,9 +1,8 @@
 import xml.etree.ElementTree as etree
 import shutil
 import os
-import sys
-import copy
-import logger
+import logging
+from logger import configure_logger
 
 from datetime import datetime
 from conf import *
@@ -14,9 +13,14 @@ class Library:
     def __init__(self, path):
         self.traktor_path = path
         self.library_path = os.path.join(path, "collection.nml")
-        self.tree = etree.parse(self.library_path, parser=etree.XMLParser(encoding="utf-8"))
-        self.collection = self.tree.getroot().find("COLLECTION")
-        self.playlists = self.tree.getroot().find("PLAYLISTS")
+        self.logger = configure_logger(logging.getLogger(__name__))
+
+        if os.path.exists(self.library_path):
+            self.tree = etree.parse(self.library_path, parser=etree.XMLParser(encoding="utf-8"))
+            self.collection = self.tree.getroot().find("COLLECTION")
+            self.playlists = self.tree.getroot().find("PLAYLISTS")
+        else:
+            self.logger.critical("Traktor library does not exist: {}".format(self.library_path))
 
     def flush(self, path=None):
         """
@@ -24,6 +28,7 @@ class Library:
         :return:
         """
         backup_path = None
+        self.logger.debug("Flushing Traktor library")
 
         if path is None:
             backup_path = self._backup()
@@ -34,6 +39,7 @@ class Library:
         return backup_path
 
     def create_new(self):
+        self.logger.debug("Creating a new library")
         version = self.tree.getroot().attrib["VERSION"]
         root = etree.Element("NML", attrib={"VERSION": version})
 
@@ -54,6 +60,7 @@ class Library:
         return etree.SubElement(parent, "PLAYLIST", attrib={"ENTRIES": str(total), "TYPE": "LIST", "UUID": ""})
 
     def _backup(self):
+        self.logger.debug("Creating a backup of Traktor library")
         backup_path = os.path.join(self.traktor_path, "Backup", "Librarian")
 
         if not os.path.exists(backup_path):

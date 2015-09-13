@@ -1,6 +1,6 @@
 <loader ng-show="loading" message="'Hold on. Scanning your collection for duplicates'"></loader>
 
-<section id="finished" ng-hide="loading" ng-cloak>
+<section ng-hide="loading" ng-cloak>
     <div class="center" ng-hide="isDone || dupCount == 0 ">
         <h2>{{dupCount}} duplicate<span ng-hide="dupCount == 1">s</span> found</h2>
 
@@ -15,15 +15,16 @@
     </div>
 
     <div class="center" ng-show="!isDone && dupCount == 0">
-      <h2>No duplicates found</h2>
+      <p class="checkmark">✓</p>
+      <h2 class="done">No duplicates found</h2>
 
       <a href="#/"><button><i class="fa fa-arrow-left"></i> Back</button></a>
     </div>
 
-
     <div class="center" ng-show="isDone">
-      <h2>Done!<br/></h2>
-      <p id="checkmark">✓</p>
+      <p class="checkmark">✓</p>
+      <h2 class="done">Done!</h2>
+
 
       <p>{{dupCount}} duplicates removed</p><br/>
 

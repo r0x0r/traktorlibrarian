@@ -12,7 +12,7 @@
 
 }
 
-.old, .error {
+.old {
   color: indianred;
 }
 
@@ -33,22 +33,10 @@
   user-select: text;
   font-size: 10pt;
   color: rgba(255,255,255,0.6);
+  text-align: center;
 }
 
 
 #processing, #finished {
   padding-top: 100px;
-}
-
-#checkmark {
-  font-size: 52pt;
-  color: greenyellow;
-  margin: 30px auto;
-  padding: 0;
-  text-shadow: 3px 1px #666;
-}
-
-#done-text {
-  font-size: 24pt;
-  font-weight: 300;
 }

@@ -1,6 +1,6 @@
 angular.module('librarian')
-    .controller('CleanController', ['$scope', '$rootScope', '$http',
-        function ($scope, $rootScope, $http) {
+    .controller('CleanController', ['$scope', '$rootScope', '$http', '$location',
+        function ($scope, $rootScope, $http, $location) {
           'use strict';
 
           $rootScope.isBackButtonVisible = true;
@@ -14,14 +14,19 @@ angular.module('librarian')
               method: 'POST',
               url: '/',
               data: {
-                action: "remove"
+                action: 'remove'
               }
-            }).success(function(data) {
-              $scope.backup = data.backup;
-              $scope.isDone = true;
-            })
+            }).then(function(response) {
+              if(response.data.status == 'ok') {
+                $scope.backup = response.data.backup;
+                $scope.isDone = true;
+              } else if(response.data.status == 'error') {
+                $rootScope.error = true;
+                $rootScope.errorMessage = response.data.message;
+                $location.path('/');
+              }
+            });
           }
-
 
           $http({
               method: 'POST',
@@ -30,18 +35,26 @@ angular.module('librarian')
                   library_dir: $rootScope.libraryDir,
                   action: 'scan'
               }
-          }).success(function(data, status, headers, config) {
-
-              $scope.dupCount = data.count;
-              $scope.duplicates = data.duplicates;
+          }).then(function(response) {
+            console.log("Duplicate scan complete");
+            if(response.data.status == 'ok') {
+              $scope.dupCount = response.data.count;
+              $scope.duplicates = response.data.duplicates;
 
               // Remove button initialization
               $scope.removeButton = 'Remove duplicates';
               $scope.isProcessing = false;
 
-              $scope.view = 'finished';
-
               $scope.loading = false;
+
+            } else if(response.data.status == 'error') {
+              console.error("Error: " + response.data.message);
+              $rootScope.error = true;
+              $rootScope.errorMessage = response.data.message;
+            }
+          },
+          function(response) {
+            console.error(response.data + " :: " + response.status)
           });
 
         }]);

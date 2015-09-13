@@ -19,14 +19,9 @@ $def with(traktor_dir)
     <script type="text/javascript" src="/static/app/landing/landing.js"></script>
     <!-- endbuild -->
 
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body ng-init="traktorDir = '$traktor_dir'">
-<!--
-unselectable='on'
-onselectstart='return false;'
--->
     <header ng-controller="HeaderController">
       <div class="header-container">
         <h1 ng-class="{ 'with-back-button': isBackButtonVisible }"
@@ -37,14 +32,21 @@ onselectstart='return false;'
 
       <div class="library-location-container">
         <button class="no-thrills-button" ng-click="selectLibrary()">
-          <span class="library-text">Library location:</span> <span class="library-dir">{{ traktorDir }}</span>
+          <span class="library-text">Library location:</span>
+          <span class="library-dir">{{ traktorDir }}</span>
+          <span class="library-not-found error" ng-hide="traktorDir">NOT FOUND</span>
           <i class="fa fa-gear"></i>
         </button>
       </div>
-      <div id="error">{{ error }}</div>
+
     </header>
 
-
+    <div class="error-container" ng-show="error">
+      <div class="error-box">
+        <button class="no-thrills-button close-button" ng-click="error = false"><i class="fa fa-times"></i></button>
+        <div class="error-box-content">{{ errorMessage }}</div>
+      </div>
+    </div>
 
     <div id="content" class="container" ng-view/>
 </body>

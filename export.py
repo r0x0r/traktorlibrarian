@@ -21,9 +21,11 @@ class Exporter:
         self.volume = volume
         self.destination = os.path.join("/Volumes", volume)
         self.music_dir = os.path.join(self.destination, Exporter.MUSIC_DIR)
-        self._entries = {}
+        self._entries = {} # key: filename, value: xml_entry
+        self._all_tracks = [] # a list of entries for exporting all tracks (to preserve order of tracks)
         self.message_queue = Queue()  # message queue for real time GUI updating
         self.workers = []  # we store worker threads here
+        self._cancel = False
         self.logger = configure_logger(logging.getLogger(__name__))
 
     def export(self):
@@ -31,11 +33,15 @@ class Exporter:
 
         tree = self.library.tree
         collection = tree.getroot().find("COLLECTION")
-        self._start_copy_thread(deepcopy(collection))
+        self._start_copy_thread(collection)
 
         for entry in collection:
+            if self._cancel:
+                return
+
             file_name = normalize("NFD", unicode(entry.find("LOCATION").attrib["FILE"]))
             self._entries[file_name] = entry
+            self._all_tracks.append(entry)
 
             location = entry.find("LOCATION")
             location.attrib["DIR"] = "/:" + Exporter.MUSIC_DIR + "/:"
@@ -49,6 +55,7 @@ class Exporter:
 
     def get_messages(self):
         if not any([worker.is_alive() for worker in self.workers]):
+            self.logger.debug("Export finished")
             return None
 
         messages = []
@@ -58,6 +65,10 @@ class Exporter:
             messages.append(message)
 
         return messages
+
+    def cancel(self):
+        self.logger.debug("Export cancel")
+        self._cancel = True
 
     def _check_volume(self):
         if not os.path.exists(self.destination):
@@ -69,10 +80,14 @@ class Exporter:
         worker.start()
 
     def _remove_orphan_files(self):
+        self.logger.debug("Removing orphan files")
         file_paths = self._entries.keys()
         orphans = set(os.listdir(self.music_dir)) - set(file_paths)
 
         for orphan in orphans:
+            if self._cancel:
+                break
+
             self.logger.info(u"Removing {0}".format(orphan))
             self.message_queue.put({"action": "delete", "item": orphan})
 
@@ -85,6 +100,9 @@ class Exporter:
 
     def _process_playlists(self):
         def recursive_scan(nodes, directory):
+            if self._cancel:
+                return
+
             for node in nodes:
                 if node.attrib["TYPE"] == "FOLDER":
                     dir_name = self._replace_filename_char(node.attrib["NAME"])
@@ -106,7 +124,7 @@ class Exporter:
                     self._export_playlist(entries, name, directory)
 
         # Export all tracks
-        self._export_playlist(self._entries.values(), u"All tracks", self.destination)
+        self._export_playlist(self._all_tracks, u"All tracks", self.destination)
 
         # Export playlists
         nodes = self.library.playlists.find("NODE").find("SUBNODES")
@@ -157,10 +175,15 @@ class Exporter:
         worker.start()
 
     def _copy_files(self, collection):
+        #collection = deepcopy(collection)
+
         if not os.path.exists(self.music_dir):
             os.makedirs(self.music_dir)
 
         for entry in collection:
+            if self._cancel:
+                return
+
             location = entry.find("LOCATION")
             src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
             file_name = location.attrib["FILE"]
@@ -168,10 +191,6 @@ class Exporter:
 
             try:
                 if os.path.exists(src):
-                    if file_name.startswith(u"King"):
-                        print file_name
-                        pass
-
                     # skip existing unmodified files
                     if os.path.exists(dest) and (os.stat(src).st_mtime - os.stat(dest).st_mtime) < 60:
                         continue
