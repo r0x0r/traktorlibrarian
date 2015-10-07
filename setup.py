@@ -8,27 +8,33 @@ import sys
 import os
 from setuptools import setup
 
-sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python')
-os.chdir('/Users/roman/Code/traktorlibrarian')
+#sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python')
+#os.chdir('/Users/roman/Code/traktorlibrarian')
 
 APP = ['Traktor Librarian.py']
 DATA_FILES = [('', ['static']), ('', ['templates'])]
-OPTIONS = {'argv_emulation': False,
+OPTIONS_OSX = {'argv_emulation': False,
            'strip': True,
            'iconfile': 'icon.icns',
            'includes': ['WebKit', 'Foundation', 'webview']}
+
+OPTIONS_WIN32 = {'argv_emulation': False,
+           'strip': True,
+           'iconfile': 'icon.icns',
+           'includes': ['win32gui', 'win32con', 'win32api', 'win32ui', 'ctypes', 'comtypes', 'webview']}
 
 if sys.platform == "darwin":
     setup(
         app=APP,
         data_files=DATA_FILES,
-        options={'py2app': OPTIONS},
+        options={'py2app': OPTIONS_OSX},
         setup_requires=['py2app'],
     )
-elif sys.plaform == "win32":
+elif sys.platform == "win32":
+    import py2exe
     setup(
         app=APP,
         data_files=DATA_FILES,
-        options={'py2exe': OPTIONS},
+        options={'py2exe': OPTIONS_WIN32},
         setup_requires=['py2exe'],
         )

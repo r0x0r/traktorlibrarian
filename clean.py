@@ -51,7 +51,7 @@ class Cleaner:
 
                 for entry in remove_entries:
                     old_path = self.library.get_full_path(entry, sys.platform == "win32")
-                    #self.logger.info(u"Removing \"{}\" in favour of \"{}\"".format(old_path, new_path))
+                    self.logger.info(u"Removing \"{}\" in favour of \"{}\"".format(old_path, new_path))
                     self._removed_duplicates.append((old_path, new_path)) # store the same information for UI
 
                     collection.remove(entry) # remove from the collection
@@ -68,6 +68,7 @@ class Cleaner:
 
         # And now get down to processing playlists
         self.process_playlists()
+        self.logger.info("\n")
         collection.set("ENTRIES", str(len(collection)))
 
     def get_result(self):
@@ -143,12 +144,13 @@ class Cleaner:
                 new_entry = self._playlist_entries[path]
                 new_path = self.library.get_full_path(new_entry, True, True)
                 playlist_entry.set("KEY", new_path)
-                #self.logger.debug(u"Playlist entry changed from \"{}\" to \"{}\"".format(path, new_path))
+                self.logger.debug(u"Playlist entry changed from \"{}\" to \"{}\"".format(path, new_path))
 
                 # Windows version of Traktor uses UUIDs for playlist entries, so those have to be updated as well
                 if sys.platform == "win32":
                     uuid = new_entry.get("UUID")
                     playlist_entry.set("UUID", uuid)
+
 
     def report(self):
         """

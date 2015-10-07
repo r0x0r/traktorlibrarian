@@ -37,9 +37,8 @@ class Index:
 
         traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
         conf["library_dir"] = traktor_dir
-        Index.logger.debug("Landing view. Traktor directory: " + traktor_dir)
 
-        return render.index(traktor_dir)
+        return render.index(traktor_dir, sys.platform)
 
     def POST(self):
         request = json.loads(web.data())
@@ -137,7 +136,7 @@ class Index:
             return json.dumps(response)
 
         elif request["action"] == "open_file_dialog":
-            directory = webview.open_file_dialog(True)[0]
+            directory = webview.create_file_dialog(webview.FOLDER_DIALOG)[0]
             response = {"status": "ok", "directory": directory}
 
             if "traktor_check" in request.keys() and request["traktor_check"]:
@@ -155,7 +154,7 @@ class Index:
         return volumes
 
 
-def start_webserver(port, tries=0):
+def start_webserver(port, server_semaphore, tries=0):
     import socket
 
     class WebApplication(web.application):
@@ -167,6 +166,8 @@ def start_webserver(port, tries=0):
         global http_port
         webapp = WebApplication(urls, globals())
         http_port = port
+        server_semaphore.release()
+
         webapp.run(port=port)
     except socket.error as e:  # retry to start a server on a different port if the current pot is occupied
         if tries > 10:  # give up after 10th try
@@ -176,4 +177,5 @@ def start_webserver(port, tries=0):
 
 
 if __name__ == "__main__":
-    start_webserver(8080)
+    server_semaphore = threading.Semaphore(0)
+    start_webserver(8080, server_semaphore)

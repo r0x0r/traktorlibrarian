@@ -1,11 +1,15 @@
 <section class="center">
+    {{ $root.platform }}
     <div class="landing">
-      <button ng-disabled="!$root.traktorDir || $root.error" class="no-thrills-button action-box" ng-click="goTo('export')">
+      <button ng-disabled="!$root.traktorDir || $root.error"
+              ng-if="$root.platform == 'darwin'"
+              class="no-thrills-button action-box" ng-click="goTo('export')">
           <i class="fa fa-arrow-circle-o-down"></i>
           <h2>Export</h2>
 
           <p>Export your music collection to a USB drive</p>
       </button>
+
 
       <button ng-disabled="!$root.traktorDir || $root.error" class="no-thrills-button action-box" ng-click="goTo('clean')">
           <i class="fa fa-copy"></i>

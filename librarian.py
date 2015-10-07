@@ -124,16 +124,17 @@ def parse_arguments():
         conf["library_dir"] = get_traktor_dir()
 
     if library_exists(conf["library_dir"]):
-        print("Using Traktor library found in {}\n".format(conf["library_dir"]))
+        print(u"Using Traktor library found in {}\n".format(conf["library_dir"]))
     else:
         logger.error(u"Traktor library not found in : {}".format(conf["library_dir"]))
         return False
 
-    conf["verbose"] = args.verbose
+    if args.verbose:
+        conf["verbose"] = logging.INFO
 
     # Check that Traktor is not running. Quit if it does.
     if is_traktor_running():
-        logger.error("Traktor is running. Please quit Traktor first.")
+        logger.error(u"Traktor is running. Please quit Traktor first.")
         #return False
 
     return args.func(args)

@@ -1,4 +1,4 @@
-$def with(traktor_dir)
+$def with(traktor_dir, platform)
 <!DOCTYPE html>
 <html ng-app="librarian">
 <head>
@@ -21,7 +21,7 @@ $def with(traktor_dir)
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body ng-init="traktorDir = '$traktor_dir'">
+<body ng-init="traktorDir = '$traktor_dir'; platform = '$platform'">
     <header ng-controller="HeaderController">
       <div class="header-container">
         <h1 ng-class="{ 'with-back-button': isBackButtonVisible }"

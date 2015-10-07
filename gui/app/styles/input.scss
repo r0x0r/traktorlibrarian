@@ -35,6 +35,7 @@ button {
 
   &:disabled {
     opacity: 0.5;
+    text-shadow: none;
 
     &:hover {
       color: $active;
@@ -142,9 +143,20 @@ input.cmn-toggle-round:checked + label:after {
   border: 0;
   padding: 0;
   box-shadow: none;
+  filter: none;
 
   &:hover {
     cursor: pointer;
     background: none;
+    filter: none;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+
+    &:hover {
+      background-color: transparent;
+      filter: none;
+    }
   }
 }
