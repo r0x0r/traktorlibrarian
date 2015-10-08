@@ -36,7 +36,9 @@ class Index:
         Index.logger = configure_logger(logging.getLogger(__name__))
 
         traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
-        conf["library_dir"] = traktor_dir
+
+        if librarian.library_exists(traktor_dir):
+            conf["library_dir"] = traktor_dir
 
         return render.index(traktor_dir, sys.platform)
 
@@ -47,7 +49,7 @@ class Index:
             if librarian.is_traktor_running():
                 response = {"status": "error", "message": "Traktor is running. Please quit it first."}
             else:
-                if Index.traktor_lib is None:
+                if Index.traktor_lib is None and "library_dir" in conf:
                     Index.library_semaphore = threading.Semaphore(0)
                     Index.traktor_lib = Library(conf["library_dir"])
                     Index.library_semaphore.release()

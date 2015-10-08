@@ -4,7 +4,6 @@ angular.module('librarian')
     .controller('LandingController', ['$scope', '$route', '$rootScope', '$http', '$location',
         function ($scope, $route, $rootScope, $http, $location) {
           $rootScope.isBackButtonVisible = false;
-            console.log($rootScope.traktorDir);
 
           $http({
             method: 'POST',
