@@ -37,8 +37,12 @@ class Index:
 
         traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
 
+        #traktor_dir = r"Y:\Documents\Native Instruments\Traktor 2.9.0"
+
         if librarian.library_exists(traktor_dir):
             conf["library_dir"] = traktor_dir
+
+        Index.library_semaphore = threading.Semaphore()
 
         return render.index(traktor_dir, sys.platform)
 
@@ -50,7 +54,6 @@ class Index:
                 response = {"status": "error", "message": "Traktor is running. Please quit it first."}
             else:
                 if Index.traktor_lib is None and "library_dir" in conf:
-                    Index.library_semaphore = threading.Semaphore(0)
                     Index.traktor_lib = Library(conf["library_dir"])
                     Index.library_semaphore.release()
 
@@ -73,10 +76,11 @@ class Index:
             if librarian.is_traktor_running():
                 response = {"status": "error", "message": "Traktor is running. Please quit it first."}
             else:
+                Index.library_semaphore.acquire()
+
                 if Index.library_semaphore is None or Index.traktor_lib is None:
                     Index.traktor_lib = Library(conf["library_dir"])
 
-                Index.library_semaphore.acquire()
                 Index.cleaner = Cleaner(Index.traktor_lib)
                 Index.library_semaphore.release()
 
@@ -156,6 +160,7 @@ class Index:
         return volumes
 
 
+
 def start_webserver(port, server_semaphore, tries=0):
     import socket
 
@@ -171,11 +176,13 @@ def start_webserver(port, server_semaphore, tries=0):
         server_semaphore.release()
 
         webapp.run(port=port)
+
     except socket.error as e:  # retry to start a server on a different port if the current pot is occupied
         if tries > 10:  # give up after 10th try
             raise e
         else:
             start_webserver(port + 1, tries + 1)
+
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
 .landing {
   width: 680px;
   margin: 50px auto 0 auto;
+  text-align: center;
 
   .action-box {
-    display: block;
-    width: 300px;
-    float: left;
+    display: inline-block;
+    width: 290px;
     margin: 20px;
     padding: 10px;
     text-align: center;

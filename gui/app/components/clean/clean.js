@@ -36,7 +36,6 @@ angular.module('librarian')
                   action: 'scan'
               }
           }).then(function(response) {
-            console.log("Duplicate scan complete");
             if(response.data.status == 'ok') {
               $scope.dupCount = response.data.count;
               $scope.duplicates = response.data.duplicates;

@@ -113,10 +113,16 @@ section {
 }
 
 .center {
-    display: -webkit-flex;
-    -webkit-flex-direction: column;
-    -webkit-align-items: center;
-    -webkit-justify-content: center;
+  /*
+  margin-left: auto;
+  margin-right: auto; */
+
+  display: table-cell;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  -webkit-align-items: center;
+  -webkit-justify-content: center;
 }
 
 .error {
