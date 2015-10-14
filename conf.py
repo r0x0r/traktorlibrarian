@@ -7,5 +7,5 @@ class Conf(dict):
     pass
 
 conf = Conf()
-conf["verbose"] = logging.ERROR
+conf["verbose"] = logging.INFO
 

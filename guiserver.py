@@ -37,8 +37,6 @@ class Index:
 
         traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
 
-        #traktor_dir = r"Y:\Documents\Native Instruments\Traktor 2.9.0"
-
         if librarian.library_exists(traktor_dir):
             conf["library_dir"] = traktor_dir
 

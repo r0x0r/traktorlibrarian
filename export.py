@@ -1,16 +1,15 @@
 import os
-import sys
 import shutil
 import xml.etree.ElementTree as etree
 import logging
 import threading
 
 from unicodedata import normalize
-from copy import deepcopy
 from Queue import Queue
 
 from logger import configure_logger
 from conf import conf
+
 
 class Exporter:
     REPLACE_CHARS = "\/:*?\"<>|"
@@ -33,20 +32,30 @@ class Exporter:
 
         tree = self.library.tree
         collection = tree.getroot().find("COLLECTION")
-        self._start_copy_thread(collection)
+        locations = []
 
         for entry in collection:
             if self._cancel:
                 return
 
+            location = entry.find("LOCATION")
+
+            src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
+            if not os.path.exists(src): # skip non-existing files TODO: exclude from playlists as well
+                continue
+
+            # save original locations in order to copy files
+            locations.append(src)
+
             file_name = normalize("NFD", unicode(entry.find("LOCATION").attrib["FILE"]))
             self._entries[file_name] = entry
             self._all_tracks.append(entry)
 
-            location = entry.find("LOCATION")
             location.attrib["DIR"] = "/:" + Exporter.MUSIC_DIR + "/:"
             location.attrib["VOLUME"] = self.volume
             location.attrib["VOLUMEID"] = self.volume
+
+        self._start_copy_thread(locations)
 
         if conf["remove_orphans"]:
             self._start_remove_orphan_thread()
@@ -169,24 +178,21 @@ class Exporter:
         full_path = os.path.join(directory, name + u".nml")
         tree.write(full_path, encoding="utf-8", xml_declaration=True)
 
-    def _start_copy_thread(self, collection):
-        worker = threading.Thread(target=self._copy_files, args=(collection, ))
+    def _start_copy_thread(self, locations):
+        worker = threading.Thread(target=self._copy_files, args=(locations, ))
         self.workers.append(worker)
         worker.start()
 
-    def _copy_files(self, collection):
-        #collection = deepcopy(collection)
+    def _copy_files(self, locations):
 
         if not os.path.exists(self.music_dir):
             os.makedirs(self.music_dir)
 
-        for entry in collection:
+        for src in locations:
             if self._cancel:
                 return
 
-            location = entry.find("LOCATION")
-            src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
-            file_name = location.attrib["FILE"]
+            file_name = os.path.basename(src)
             dest = os.path.join(self.music_dir, file_name)
 
             try:
@@ -196,8 +202,11 @@ class Exporter:
                         continue
 
                     self.logger.info(u"Copying {}".format(file_name))
+                    self.logger.info(u"Destination: " + dest)
                     self.message_queue.put({"action": "copy", "item": file_name})
                     Exporter._copy(src, dest)
+                else:
+                    self.logger.error(src + " does not exist")
 
             except IOError as e:
                 self.logger.error(e)
