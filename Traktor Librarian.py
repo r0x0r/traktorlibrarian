@@ -26,4 +26,3 @@ if __name__ == '__main__':
 
     os._exit(0)
 
-#    sys.exit(1)
