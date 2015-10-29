@@ -33,40 +33,51 @@ angular.module('librarian', ['ngRoute'])
     function($scope, $location, $http, $rootScope) {
       'use strict';
 
-       $scope.goToHome = function() {
-         if ($location.path() !== '/') {
-           $location.path('/');
-         }
-       };
+        var initialize = function() {
+            $http({
+                method: 'POST',
+                url: '/',
+                data: {
+                    action: 'initialize'
+                }
+            }).success(function (data, status, headers, config) {
+                if(data.status == "ok") {
+                    $rootScope.error = false;
+                    $rootScope.volumes = data.volumes;
+                } else if (data.statur == "error") {
+                    $rootScope.error = true;
+                }
+            });
+        }
 
-      $scope.selectLibrary = function() {
-        $http({
-          method: 'POST',
-          url: '/',
-          data: {
-            action: 'open_file_dialog',
-            traktor_check: true
-          }
-        }).success(function (data) {
+        $scope.goToHome = function() {
+            if ($location.path() !== '/') {
+                $location.path('/');
+            }
+        };
 
-          if(data.status == "ok") {
-            $rootScope.traktorDir = data.directory;
+        $rootScope.checkTraktor = function() {
+            initialize();
+        }
 
+        $scope.selectLibrary = function() {
             $http({
               method: 'POST',
               url: '/',
               data: {
-                action: 'initialize'
+                action: 'open_file_dialog',
+                traktor_check: true
               }
-            }).success(function (data, status, headers, config) {
+            }).success(function (data) {
 
-              $rootScope.volumes = data.volumes;
+              if(data.status == "ok") {
+                $rootScope.traktorDir = data.directory;
+                initialize();
+              } else if (data.status == "error") {
+                $rootScope.error = true;
+                $rootScope.errorMessage = data.message;
+              }
             });
-          } else if (data.status == "error") {
-            $rootScope.error = true;
-            $rootScope.errorMessage = data.message;
-          }
-        });
-      }
+        }
     }
   ]);

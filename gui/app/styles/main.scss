@@ -113,13 +113,13 @@ section {
 }
 
 .center {
-  /*
-  margin-left: auto;
-  margin-right: auto; */
-
   display: table-cell;
+  display: -ms-flex;
   display: -webkit-flex;
   display: flex;
+  -ms-flex-direction: column;
+  -ms-align-items: center;
+  -ms-justify-content: center;
   -webkit-flex-direction: column;
   -webkit-align-items: center;
   -webkit-justify-content: center;

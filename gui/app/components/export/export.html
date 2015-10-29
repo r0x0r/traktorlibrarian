@@ -19,7 +19,7 @@
 
       <p ng-if="!volumes || volumes.length == 0" class="please-insert">Please insert a USB drive</p>
 
-      <fieldset ng-if="volumes.length > 0">
+      <fieldset ng-if="volumes.length > 0" class="options-container">
         <input id="orphan-checkbox"
                type="checkbox" value="None" name="check"  ng-click="toggleOrphans()"/>
         <label for="orphan-checkbox" title="Remove tracks at the destination that are not present in the Traktor library">Remove orphan tracks</label>
