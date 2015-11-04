@@ -39,15 +39,19 @@ class Exporter:
                 return
 
             location = entry.find("LOCATION")
-
+            modification_info = entry.find("MODIFICATION_INFO")
             src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
-            if not os.path.exists(src): # skip non-existing files TODO: exclude from playlists as well
+
+            if not os.path.exists(src): # skip non-existing files
+                continue
+            elif modification_info.attrib["AUTHOR_TYPE"] == "importer" and location.attrib["FILE"].endswith(".wav"):
+                # skip recordings
                 continue
 
             # save original locations in order to copy files
             locations.append(src)
 
-            file_name = normalize("NFD", unicode(entry.find("LOCATION").attrib["FILE"]))
+            file_name = normalize("NFD", unicode(location.attrib["FILE"]))
             self._entries[file_name] = entry
             self._all_tracks.append(entry)
 
@@ -151,7 +155,11 @@ class Exporter:
         for playlist_entry in node.find("PLAYLIST"):
             key = playlist_entry.find("PRIMARYKEY")
             file_name = normalize("NFD", unicode(key.attrib["KEY"].split("/:")[-1]))
-            entries.append(self._entries[file_name])
+
+            if file_name in self._entries:
+                entries.append(self._entries[file_name])
+            else:
+                self.logger.debug("Skipping non-existing file {0} ".format(file_name))
 
         return entries
 
@@ -191,6 +199,8 @@ class Exporter:
         for src in locations:
             if self._cancel:
                 return
+
+            print src
 
             file_name = os.path.basename(src)
             dest = os.path.join(self.music_dir, file_name)

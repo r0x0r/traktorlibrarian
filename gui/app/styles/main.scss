@@ -123,6 +123,9 @@ section {
   -webkit-flex-direction: column;
   -webkit-align-items: center;
   -webkit-justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .error {
