@@ -16,7 +16,7 @@ Traktor Librarian is OSX and Windows compatible and comes in GUI and command lin
 
 ## 2.0
 
-- `New` Add an ability to export your music collection (both music and playlist structure) to an external drive. OSX only.
+- `New` Add an ability to export your music collection (both music files and playlist structure) to an external drive. OSX only.
 - `Improved` New GUI
 - `Fixed `Fix a failure to detect duplicates on an external drive
 
