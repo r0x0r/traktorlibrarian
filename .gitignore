@@ -9,3 +9,4 @@ report.log
 static
 templates
 npm-debug.log
+.*
