@@ -7,5 +7,6 @@ class Conf(dict):
     pass
 
 conf = Conf()
-conf["verbose"] = logging.INFO
-
+conf.verbose = logging.DEBUG
+conf.is_console = False
+conf.filelog = False

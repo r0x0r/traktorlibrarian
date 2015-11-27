@@ -7,7 +7,7 @@
 
     <div class="drive-container">
       <ul class="drive-list">
-          <li ng-repeat="volume in volumes"
+          <li ng-repeat="volume in $root.volumes"
               ng-class="{'selected': $parent.selectedDriveIndex === $index}"
               ng-click="$parent.selectDrive($index)">
               <div class="drive">
@@ -39,6 +39,7 @@
     <button ng-click="export()" ng-disabled="!destination">Export</button>
 
 </section>
+
 <section class="export-status" ng-if="isExporting">
 
     <loader ng-if='!isDone' message="'Hold on. Exporting your music collection'"></loader>
@@ -51,7 +52,7 @@
         <span ng-switch-when="playlist">Exporting playlist <strong>{{ message.item }}</strong></span>
       </p>
 
-      <button ng-click="cancelExport()">Cancel</button>
+      <button class="push-down" ng-click="cancelExport()">Cancel</button>
     </div>
 
     <div ng-if="isDone" class="center">

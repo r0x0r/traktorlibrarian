@@ -25,8 +25,8 @@
       <p class="checkmark">✓</p>
       <h2 class="done">Done!</h2>
 
-
-      <p>{{dupCount}} duplicates removed</p><br/>
+      <p ng-if="dupCount > 1">{{dupCount}} duplicates removed</p><br/>
+      <p ng-if="dupCount == 1">1 duplicate removed</p><br/>
 
       <p id="backup"
          unselectable='off'

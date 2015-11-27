@@ -1,116 +1,101 @@
 angular.module('librarian')
-    .controller('ExportController', ['$scope', '$http', '$interval', '$rootScope', '$location',
-        function ($scope, $http, $interval, $rootScope, $location) {
-          'use strict';
+    .controller('ExportController', [
+        '$scope',
+        '$http',
+        '$interval',
+        '$rootScope',
+        '$location',
+        '$timeout',
+        'VolumeService',
+        'StatusService',
 
-          $rootScope.isBackButtonVisible = true;
-          $scope.volumes = $rootScope.volumes;
-          $scope.removeOrphans = false;
-          $scope.selectedDriveIndex = -1;
-          $scope.cancelled = false;
-          $scope.destination = "";
+        function ($scope, $http, $interval, $rootScope, $location, $timeout, VolumeService, StatusService) {
+            'use strict';
 
-          var statusUpdatePromise;
+            $scope.removeOrphans = false;
+            $scope.selectedDriveIndex = -1;
+            $scope.destination = "";
 
-          var getVolumes = function() {
-              $http({
-                  method: 'POST',
-                  url: '/',
-                  data: {
-                      action: 'check_volumes'
-                  }
-              }).then(function (response) {
-                $scope.volumes = response.data.volumes;
-                console.log($scope.volumes);
-              });
-          };
+            $scope.messages = [];
 
-          var getExportStatus = function() {
-              $http({
-                  method: 'POST',
-                  url: '/',
-                  data: {
-                      action: 'export_status'
-                  }
-              }).then(function (response) {
-                  if (response.data.status === 'ok') {
-                      messages = messages.concat(response.data.messages);
-                  } else if (response.data.status === 'end') {
-                      $scope.isDone = true;
-                      $interval.cancel(statusUpdatePromise);
-                      $interval.cancel(messagePromise);
-                  }
-              });
-          };
+            var processMessages = function (event, newMessages) {
+                if (newMessages == 'end') {
+                    $scope.isDone = true;
+                    StatusService.stop();
+                } else {
+                    $scope.messages = $scope.messages.concat(newMessages);
+                }
+            };
 
-          var messages = [];
+            $scope.$watchCollection('messages', function(newCol, oldCol, scope) {
+                $timeout(function () {
+                    var message = $scope.messages.shift();
+                    if (message) $scope.message = message;
+                }, 100);
+            });
 
-          var displayMessage = function() {
-            var message = messages.shift();
+            VolumeService.start();
 
-            if (message)
-              $scope.message = message;
-          }
-
-          var volumePromise = $interval(getVolumes, 1000, 0),
-              messagePromise = $interval(displayMessage, 300 ,0);
-
-          $scope.selectDrive = function(index) {
+            $scope.selectDrive = function(index) {
               $scope.selectedDriveIndex = index;
               $scope.destination = $scope.volumes[$scope.selectedDriveIndex];
-          };
+            };
 
-          $scope.toggleOrphans = function() {
+            $scope.toggleOrphans = function() {
             $scope.removeOrphans = !$scope.removeOrphans;
-          }
+            }
 
-          $scope.export = function() {
+            $scope.export = function() {
               $scope.isExporting = true;
-              $interval.cancel(volumePromise);
+              VolumeService.stop();
 
               $http({
                   method: 'POST',
-                  url: '/',
+                  url: '/export',
                   data: {
-                      action: 'export',
                       destination: $scope.destination,
                       remove_orphans: $scope.removeOrphans
                   }
               }).then(function (response) {
                   if (response.data.status === 'ok') {
-                      statusUpdatePromise = $interval(getExportStatus, 1000, 0);
+                      StatusService.subscribe($scope, processMessages);
+                      StatusService.start();
                   } else if(response.data.status == "error") {
-                    $rootScope.error = true;
-                    $rootScope.errorMessage = response.data.message;
+                      $rootScope.$emit('error', response.data.message);
                   }
               });
-          };
+            };
 
-          $scope.cancelExport = function () {
-            $scope.cancelled = true;
-            $interval.cancel(statusUpdatePromise);
-
-            $http({
-              method: 'POST',
-              url: '/',
-              data: {
-                action: 'cancel'
-              }
-            }).then(function (response) {
-              if (response.data.status === 'ok') {
-                $scope.goToHome();
-              }
-            });
-          };
-
-          $scope.goToHome = function() {
-            if(!$scope.cancelled)
-              $scope.cancelExport();
-
-            if ($location.path() !== '/') {
-              $location.path('/');
+            var cancelExport = function() {
+                return $http({
+                    method: 'GET',
+                    url: '/export/cancel'
+                })
             }
-          };
+
+            $scope.cancelExport = function () {
+                StatusService.stop();
+
+                cancelExport().then(function (response) {
+                    if (response.data.status === 'ok') {
+                        $scope.goToHome();
+                    }
+                });
+            };
+
+            $scope.goToHome = function() {
+                if ($location.path() !== '/') {
+                    $location.path('/');
+                }
+            };
+
+            $rootScope.$on('home-event', function() {
+                StatusService.stop();
+                VolumeService.stop();
+                cancelExport();
+            });
 
         }
     ]);
+
+

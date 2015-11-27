@@ -1,9 +1,7 @@
 #!/bin/python
 # -*- coding: utf-8 -*-
 """
-Traktor Librarian v0.9
-A tool to clean up your Traktor library from duplicates.
-Works currently on Mac OSX only.
+Traktor Librarian v2.0
 """
 
 
@@ -25,9 +23,9 @@ logger = configure_logger(logging.getLogger(__name__))
 
 def main():
     try:
-        lib = Library(conf["library_dir"])
+        lib = Library(conf.library_dir)
 
-        if conf["action"] == "clean":
+        if conf.action == "clean":
             cleaner = Cleaner(lib)
             print("Removing duplicates..."),
             cleaner.remove_duplicates()
@@ -35,13 +33,13 @@ def main():
 
             cleaner.report()
 
-            if not conf["test"]:
+            if not conf.test:
                 lib.flush()
                 print("\nTraktor library updated.")
             else:
                 print("\nTest run. No changes made to the library.")
-        elif conf["action"] == "export":
-            exporter = Exporter(lib, conf["export_dir"])
+        elif conf.action == "export":
+            exporter = Exporter(lib, conf.export_dir)
             exporter.export()
 
     except Exception as e:
@@ -119,11 +117,11 @@ def parse_arguments():
     args = parser.parse_args()
 
     if args.library:
-        conf["library_dir"] = args.library
+        conf.library_dir = args.library
     else:
-        conf["library_dir"] = get_traktor_dir()
+        conf.library_dir = get_traktor_dir()
 
-    if library_exists(conf["library_dir"]):
+    if library_exists(conf.library_dir):
         print(u"Using Traktor library found in {}\n".format(conf["library_dir"]))
     else:
         logger.error(u"Traktor library not found in : {}".format(conf["library_dir"]))
@@ -141,8 +139,8 @@ def parse_arguments():
 
 
 def parse_clean(args):
-    conf["action"] = "clean"
-    conf["test"] = args.test
+    conf.action = "clean"
+    conf.test = args.test
 
     return True
 
@@ -152,14 +150,16 @@ def parse_export(args):
         logger.error(u"Please specify destination")
         return False
 
-    conf["action"] = "export"
-    conf["export_dir"] = args.destination
-    conf["remove_orphans"] = args.remove
+    conf.action = "export"
+    conf.export_dir = args.destination
+    conf.remove_orphans = args.remove
+
     return True
 
 
 if __name__ == '__main__':
-    conf["filelog"] = True
+    conf.filelog = True
+    conf.is_console = True
 
     if parse_arguments():
         main()

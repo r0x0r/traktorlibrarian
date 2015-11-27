@@ -1,0 +1,43 @@
+.error-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+
+  .error-container {
+    position: fixed;
+    top: 250px;
+    left: 200px;
+    z-index: 100;
+
+    .error-box {
+      .close-button {
+        position: absolute;
+        top: 6px;
+        right: 14px;
+        opacity: 0.98;
+        font-size: 24px;
+
+        &:hover {
+          opacity: 1.0
+        }
+      }
+
+      width: 400px;
+      height: 180px;
+      display: table-cell;
+      vertical-align: middle;
+      background-color: rgb(149, 76, 76);
+      color: white;
+      border-radius: 18px;
+      border: 5px solid indianred;
+
+      &-content {
+        font-size: 18px;
+        text-align: center;
+      }
+    }
+  }
+}

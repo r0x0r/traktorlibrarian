@@ -6,6 +6,7 @@ import threading
 
 from unicodedata import normalize
 from Queue import Queue
+from copy import deepcopy
 
 from logger import configure_logger
 from conf import conf
@@ -15,7 +16,10 @@ class Exporter:
     REPLACE_CHARS = "\/:*?\"<>|"
     MUSIC_DIR = u".Music"
 
+    instance = None
+
     def __init__(self, library, volume):
+        Exporter.instance = self
         self.library = library
         self.volume = volume
         self.destination = os.path.join("/Volumes", volume)
@@ -23,9 +27,13 @@ class Exporter:
         self._entries = {} # key: filename, value: xml_entry
         self._all_tracks = [] # a list of entries for exporting all tracks (to preserve order of tracks)
         self.message_queue = Queue()  # message queue for real time GUI updating
+        self.start_messages = False  # flag that indicates when it is ok to start sending GUI messages
         self.workers = []  # we store worker threads here
         self._cancel = False
         self.logger = configure_logger(logging.getLogger(__name__))
+
+    def __del__(self):
+        del self.logger
 
     def export(self):
         self._check_volume()
@@ -42,7 +50,7 @@ class Exporter:
             modification_info = entry.find("MODIFICATION_INFO")
             src = os.path.join(location.attrib["DIR"].replace("/:", "/"), location.attrib["FILE"])
 
-            if not os.path.exists(src): # skip non-existing files
+            if not os.path.exists(src):  # skip non-existing files
                 continue
             elif modification_info.attrib["AUTHOR_TYPE"] == "importer" and location.attrib["FILE"].endswith(".wav"):
                 # skip recordings
@@ -61,14 +69,20 @@ class Exporter:
 
         self._start_copy_thread(locations)
 
-        if conf["remove_orphans"]:
+        if conf.remove_orphans:
             self._start_remove_orphan_thread()
 
         self._start_process_playlists_thread()
+        self.start_messages = True
+
+        for worker in self.workers:
+            worker.join()
+
+        if not self._cancel:
+            self.logger.info(u"Export finished")
 
     def get_messages(self):
-        if not any([worker.is_alive() for worker in self.workers]):
-            self.logger.debug("Export finished")
+        if self.start_messages and not any([worker.is_alive() for worker in self.workers]):
             return None
 
         messages = []
@@ -85,15 +99,17 @@ class Exporter:
 
     def _check_volume(self):
         if not os.path.exists(self.destination):
-            raise IOError("Volume {0} does not exist.".format(self.volume))
+            raise IOError(u"Volume {0} does not exist.".format(self.volume))
 
     def _start_remove_orphan_thread(self):
         worker = threading.Thread(target=self._remove_orphan_files)
         self.workers.append(worker)
         worker.start()
 
+        return worker
+
     def _remove_orphan_files(self):
-        self.logger.debug("Removing orphan files")
+        self.logger.debug(u"Removing orphan files")
         file_paths = self._entries.keys()
         orphans = set(os.listdir(self.music_dir)) - set(file_paths)
 
@@ -159,7 +175,7 @@ class Exporter:
             if file_name in self._entries:
                 entries.append(self._entries[file_name])
             else:
-                self.logger.debug("Skipping non-existing file {0} ".format(file_name))
+                self.logger.debug(u"Skipping non-existing file {0} ".format(file_name))
 
         return entries
 
@@ -191,6 +207,7 @@ class Exporter:
         self.workers.append(worker)
         worker.start()
 
+
     def _copy_files(self, locations):
 
         if not os.path.exists(self.music_dir):
@@ -199,8 +216,6 @@ class Exporter:
         for src in locations:
             if self._cancel:
                 return
-
-            print src
 
             file_name = os.path.basename(src)
             dest = os.path.join(self.music_dir, file_name)
@@ -212,11 +227,10 @@ class Exporter:
                         continue
 
                     self.logger.info(u"Copying {}".format(file_name))
-                    self.logger.info(u"Destination: " + dest)
                     self.message_queue.put({"action": "copy", "item": file_name})
                     Exporter._copy(src, dest)
                 else:
-                    self.logger.error(src + " does not exist")
+                    self.logger.error(src + u" does not exist")
 
             except IOError as e:
                 self.logger.error(e)
@@ -242,7 +256,7 @@ class Exporter:
                 buffer_size = 1024
 
             if shutil._samefile(src, dst):
-                raise shutil.Error("`%s` and `%s` are the same file" % (src, dst))
+                raise shutil.Error(u"`%s` and `%s` are the same file" % (src, dst))
             for fn in [src, dst]:
                 try:
                     st = os.stat(fn)
@@ -252,7 +266,7 @@ class Exporter:
                 else:
                     # XXX What about other special files? (sockets, devices...)
                     if shutil.stat.S_ISFIFO(st.st_mode):
-                        raise shutil.SpecialFileError("`%s` is a named pipe" % fn)
+                        raise shutil.SpecialFileError(u"`%s` is a named pipe" % fn)
             with open(src, 'rb') as fsrc:
                 with open(dst, 'wb') as fdst:
                     shutil.copyfileobj(fsrc, fdst, buffer_size)

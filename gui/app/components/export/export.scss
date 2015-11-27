@@ -16,10 +16,11 @@
       text-align: center;
       border: 5px solid transparent;
       border-radius: 15px;
+      vertical-align: top;
 
       .drive {
         display: inline-block;
-        width: 120px;
+        width: 140px;
 
         .drive-icon {
           display: block;
@@ -51,7 +52,7 @@
 
 .status-message {
   min-height: 1em;
-  margin: 0 auto 30px auto;
+  margin: 40px auto 30px auto;
   font-size: 12px;
   font-style: italic;
 }
@@ -82,9 +83,13 @@
 }
 
 .options-container {
-  margin-top: 20px;
+  margin-top: 5px;
 }
 
+
+.push-down {
+  margin-top: 35px;
+}
 
 /*
 .checkbox {

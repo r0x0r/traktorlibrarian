@@ -2,6 +2,7 @@ import xml.etree.ElementTree as etree
 import shutil
 import os
 import logging
+import threading
 from logger import configure_logger
 
 from datetime import datetime
@@ -10,17 +11,32 @@ from conf import *
 
 class Library:
 
+    _instance = None
+
     def __init__(self, path):
+        Library._instance = self
+        self.semaphore = threading.Semaphore()
         self.traktor_path = path
         self.library_path = os.path.join(path, "collection.nml")
         self.logger = configure_logger(logging.getLogger(__name__))
 
         if os.path.exists(self.library_path):
+            self.semaphore.acquire()
             self.tree = etree.parse(self.library_path, parser=etree.XMLParser(encoding="utf-8"))
             self.collection = self.tree.getroot().find("COLLECTION")
             self.playlists = self.tree.getroot().find("PLAYLISTS")
+            self.semaphore.release()
         else:
             self.logger.critical("Traktor library does not exist: {}".format(self.library_path))
+
+    @staticmethod
+    def instance():
+        if Library._instance:
+            Library._instance.semaphore.acquire()
+            Library._instance.semaphore.release()
+
+        return Library._instance
+
 
     def flush(self, path=None):
         """
@@ -39,7 +55,6 @@ class Library:
         return backup_path
 
     def create_new(self):
-        self.logger.debug("Creating a new library")
         version = self.tree.getroot().attrib["VERSION"]
         root = etree.Element("NML", attrib={"VERSION": version})
 

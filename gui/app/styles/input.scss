@@ -153,6 +153,7 @@ input.cmn-toggle-round:checked + label:after {
 
   &:disabled {
     opacity: 0.6;
+    cursor: auto;
 
     &:hover {
       background-color: transparent;

@@ -24,58 +24,38 @@ angular.module('librarian', ['ngRoute'])
           });
     }
   ])
+
 .controller('HeaderController', [
     '$scope',
     '$location',
     '$http',
     '$rootScope',
+    '$route',
 
-    function($scope, $location, $http, $rootScope) {
+    function($scope, $location, $http, $rootScope, $route) {
       'use strict';
 
-        var initialize = function() {
-            $http({
-                method: 'POST',
-                url: '/',
-                data: {
-                    action: 'initialize'
-                }
-            }).success(function (data, status, headers, config) {
-                if(data.status == "ok") {
-                    $rootScope.error = false;
-                    $rootScope.volumes = data.volumes;
-                } else if (data.statur == "error") {
-                    $rootScope.error = true;
-                }
-            });
-        }
-
         $scope.goToHome = function() {
+            $rootScope.$emit('home-event');
+
             if ($location.path() !== '/') {
                 $location.path('/');
             }
         };
 
-        $rootScope.checkTraktor = function() {
-            initialize();
-        }
-
         $scope.selectLibrary = function() {
             $http({
               method: 'POST',
-              url: '/',
+              url: '/choose/path',
               data: {
-                action: 'open_file_dialog',
                 traktor_check: true
               }
-            }).success(function (data) {
-
-              if(data.status == "ok") {
-                $rootScope.traktorDir = data.directory;
-                initialize();
-              } else if (data.status == "error") {
-                $rootScope.error = true;
-                $rootScope.errorMessage = data.message;
+            }).then(function (response) {
+              if(response.data.status == "ok") {
+                  $rootScope.traktorDir = response.data.directory;
+                  $route.reload();
+              } else if (response.data.status == "error") {
+                  $rootScope.$emit('error', response.data.message);
               }
             });
         }

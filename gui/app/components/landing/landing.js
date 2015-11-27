@@ -1,42 +1,42 @@
 'use strict';
 
 angular.module('librarian')
-    .controller('LandingController', ['$scope', '$route', '$rootScope', '$http', '$location',
-        function ($scope, $route, $rootScope, $http, $location) {
-          $rootScope.isBackButtonVisible = false;
+    .controller('LandingController', [
+      '$scope',
+      '$route',
+      '$rootScope',
+      '$http',
+      '$location',
+      'VolumeService',
 
-          $http({
-            method: 'POST',
-            url: '/',
-            data: {
-              action: 'initialize'
-            }
-          }).success(function (data, status, headers, config) {
-            $rootScope.volumes = data.volumes;
-
-            if (data.status == "error") {
-              $rootScope.error = true;
-              $rootScope.errorMessage = data.message;
-            }
-          });
+      function ($scope, $route, $rootScope, $http, $location, VolumeService) {
+          $rootScope.isLanding = true;
 
           $scope.goTo = function(link) {
             $http({
-              method: 'POST',
-              url: '/',
-              data: {
-                action: 'check'
-              }
-            }).success(function (data) {
-              if (data.status == "ok") {
-                $location.path(link);
-              } else if (data.status == "error") {
-                $rootScope.error = true;
-                $rootScope.errorMessage = data.message;
-              }
+                  method: 'GET',
+                  url: '/check/traktor',
+            }).then(function (response) {
+                if(response.data.status == 'ok') {
+                    $rootScope.isLanding = false;
+                    $location.path(link);
+                } else if (response.data.status == 'error') {
+                    $rootScope.$emit('error', response.data.message);
+                }
             });
 
           }
+
+          var initialize = function() {
+              VolumeService.getVolumes();
+              $http({
+                  method: 'GET',
+                  url: '/init',
+              }).then(function (data) {
+              });
+          }
+
+          initialize();
     }]);
 
 

@@ -3,10 +3,12 @@
 @import 'colors';
 @import 'animation';
 @import 'input';
+
 @import '../components/loader/loader';
 @import '../components/landing/landing';
 @import '../components/export/export';
 @import '../components/clean/clean';
+@import '../components/error/error';
 
 * {
     box-sizing: border-box;
@@ -83,7 +85,7 @@ h1 {
 }
 
 h2 {
-    margin: 23px 1em;
+    margin: 13px 1em 23px 1em;
     font-size: 26px;
     text-transform: uppercase;
 
@@ -150,41 +152,6 @@ section {
 
 a:link, a:visited {
   text-decoration: none;
-}
-
-.error-container {
-  position: absolute;
-  top: 200px;
-  left: 200px;
-  z-index: 100;
-
-  .error-box {
-    .close-button {
-      position: absolute;
-      top: 6px;
-      right: 14px;
-      opacity: 0.98;
-      font-size: 24px;
-
-      &:hover {
-        opacity: 1.0
-      }
-    }
-
-    width: 400px;
-    height: 180px;
-    display: table-cell;
-    vertical-align: middle;
-    background-color: rgb(149, 76, 76);
-    color: white;
-    border-radius: 18px;
-    border: 5px solid indianred;
-
-    &-content {
-      font-size: 18px;
-      text-align: center;
-    }
-  }
 }
 
 

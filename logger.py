@@ -18,11 +18,11 @@ def configure_logger(logger):
     def _exception_hook(excType, excValue, traceback, logger=logger):
         logger.error("", exc_info=(excType, excValue, traceback))
 
-    stream_logger = logging.StreamHandler(sys.stdout)
-    stream_logger.setLevel(conf["verbose"])
-    logger.addHandler(stream_logger)
-
-    if conf["verbose"] == logging.DEBUG:
+    if conf.is_console:
+        stream_logger = logging.StreamHandler(sys.stdout)
+        stream_logger.setLevel(conf.verbose)
+        logger.addHandler(stream_logger)
+    else:
         syslog_logger = SysLogHandler()
         syslog_logger.setLevel(logging.DEBUG)
 
@@ -32,7 +32,7 @@ def configure_logger(logger):
         logger.addHandler(syslog_logger)
         sys.excepthook = _exception_hook
 
-    if "filelog" in conf and conf["filelog"]:
+    if conf.filelog:
         file_logger = logging.FileHandler("report.log")
         file_logger.setLevel(logging.INFO)
 
@@ -42,6 +42,6 @@ def configure_logger(logger):
         logger.info("TraktorLibrarian run on {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         logger.info("="*80)
 
-    logger.level = conf["verbose"]
+    logger.level = conf.verbose
 
     return logger

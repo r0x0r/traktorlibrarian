@@ -27,14 +27,14 @@ $def with(traktor_dir, platform)
 <body ng-init="traktorDir = '$traktor_dir'; platform = '$platform'">
     <header ng-controller="HeaderController">
       <div class="header-container">
-        <h1 ng-class="{ 'with-back-button': isBackButtonVisible }"
+        <h1 ng-class="{ 'with-back-button': !isLanding }"
             ng-click="goToHome()">
           <i class="fa fa-arrow-left back-button"></i><span>Traktor Librarian</span>
         </h1>
       </div>
 
       <div class="library-location-container">
-        <button class="no-thrills-button" ng-click="selectLibrary()">
+        <button class="no-thrills-button" ng-click="selectLibrary()" ng-disabled="!isLanding">
           <span class="library-text">Library location:</span>
           <span class="library-dir">{{ traktorDir }}</span>
           <span class="library-not-found error" ng-hide="traktorDir">NOT FOUND</span>
@@ -44,12 +44,7 @@ $def with(traktor_dir, platform)
 
     </header>
 
-    <div class="error-container" ng-show="error">
-      <div class="error-box">
-        <button class="no-thrills-button close-button" ng-click="checkTraktor()"><i class="fa fa-times"></i></button>
-        <div class="error-box-content">{{ errorMessage }}</div>
-      </div>
-    </div>
+    <error></error>
 
     <div id="content" class="container" ng-view/>
 </body>
