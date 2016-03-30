@@ -6,7 +6,5 @@ build
 report.log
 .sass-cache
 *.map
-static
-templates
 npm-debug.log
 .*

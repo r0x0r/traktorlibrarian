@@ -1,9 +1,11 @@
 import os
 import sys
 import librarian
-import psutil
 import threading
 import logging
+
+if sys.platform == "darwin":
+    import psutil
 
 from clean import Cleaner
 from export import Exporter
@@ -38,15 +40,15 @@ logger = configure_logger(logging.getLogger(__name__))
 
 class Landing:
     def GET(self):
-        conf.filelog = False  # disable file logging
-        conf.debug = True  # disable verbose messages
+        conf.filelog = True  # enable file logging
+        conf.debug = True  # enable verbose messages
 
-        traktor_dir = librarian.get_traktor_dir().replace("\\", "\\\\")
+        traktor_dir = librarian.get_traktor_dir()
 
         if librarian.library_exists(traktor_dir):
             conf.library_dir = traktor_dir
-
-        return render.index(traktor_dir, sys.platform)
+        web.header("Cache-Control", "no-cache")
+        return render.index(traktor_dir.replace("\\", "\\\\"), sys.platform)
 
 
 class Initialize:
@@ -54,6 +56,7 @@ class Initialize:
         if hasattr(conf, "library_dir"):
             initialize_library(conf.library_dir)
 
+        web.header("Cache-Control", "no-cache")
         response = {"status": "ok"}
         return json.dumps(response)
 
@@ -64,7 +67,7 @@ class CheckTraktor:
             response = {"status": "ok"}
         else:
             response = {"status": "error", "message": "Please quit Traktor first."}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 
@@ -79,7 +82,7 @@ class Clean:
 
             response = cleaner.get_result()
             response["status"] = "ok"
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 
@@ -89,7 +92,7 @@ class CleanConfirm:
             response = {"status": "ok", "backup": Library.instance().flush()}
         except:
             response = {"status": "error"}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 
@@ -105,7 +108,7 @@ class Export:
             export_worker = threading.Thread(target=self._export, args=(request["destination"],))
             export_worker.start()
             response = {"status": "ok"}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
     def _export(self, destination):
@@ -121,7 +124,7 @@ class ExportCancel:
             response = {"status": "ok"}
         else:
             response = {"status": "error"}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 
@@ -129,6 +132,7 @@ class ExportVolumeScan:
     def GET(self):
         volumes = get_volumes()
         response = {"status": "ok", "volumes": volumes}
+        web.header('Cache-Control', 'no-cache')
 
         return json.dumps(response)
 
@@ -147,7 +151,7 @@ class ExportStatus:
             response = {"status": status, "messages": messages}
         else:
             response = {"status": "ok"}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 
@@ -168,7 +172,7 @@ class ChoosePath:
                     response = {"status": "error", "message": "Traktor library not found in {}".format(directory)}
         else:
             response = {"status": "cancel"}
-
+        web.header("Cache-Control", "no-cache")
         return json.dumps(response)
 
 

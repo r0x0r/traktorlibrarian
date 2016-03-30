@@ -68,7 +68,10 @@ def get_traktor_dir():
     if sys.platform == "darwin":
         base_dir = os.path.join(base_dir, u"Documents")
     elif sys.platform == "win32":
-        base_dir = os.path.join(base_dir, u"My Documents")
+        base_dir = os.path.join(base_dir, u"Documents")
+
+        if not os.path.exists(base_dir):
+            base_dir = os.path.join(base_dir, u"My Documents")
 
     traktor_dir = os.path.join(base_dir, u"Native Instruments", u"Traktor*")
     traktor_dir = glob(traktor_dir)

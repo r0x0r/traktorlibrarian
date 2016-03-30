@@ -162,7 +162,7 @@ class Exporter:
     @staticmethod
     def _replace_filename_char(value):
         for c in Exporter.REPLACE_CHARS:
-            value = value.replace(c, '-')
+            value = value.replace(c, u'-')
         return value
 
     def _get_playlist_entries(self, node):
@@ -170,7 +170,7 @@ class Exporter:
 
         for playlist_entry in node.find("PLAYLIST"):
             key = playlist_entry.find("PRIMARYKEY")
-            file_name = normalize("NFD", unicode(key.attrib["KEY"].split("/:")[-1]))
+            file_name = normalize("NFD", unicode(key.attrib["KEY"].split(u'/:')[-1]))
 
             if file_name in self._entries:
                 entries.append(self._entries[file_name])
