@@ -8,3 +8,7 @@ report.log
 *.map
 npm-debug.log
 .*
+static
+templates
+bower_components
+node_modules
