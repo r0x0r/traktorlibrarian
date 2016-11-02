@@ -1,47 +1,47 @@
-__author__ = 'roman'
 import sys
+import os
 import logging
 from logging.handlers import SysLogHandler
-
 from datetime import datetime
-from conf import conf
+
+#from config import get_config_dir
 
 
 
-def configure_logger(logger):
+is_filelog = True
+is_console = True
+logging_level = logging.DEBUG
+
+def get_logger(name):
     """
     Set up loggers for this class. There are two loggers in use. StreamLogger prints information on the screen with
     the default level ERROR (INFO if the verbose flag is set). FileLogger logs INFO entries to the report.log file.
     report.log is never purged, but information from new runs is appended to the end of the file.
     :return:
     """
-    def _exception_hook(excType, excValue, traceback, logger=logger):
+    def _exception_hook(excType, excValue, traceback, logger):
         logger.error("", exc_info=(excType, excValue, traceback))
 
-    if conf.is_console:
+    logger = logging.getLogger(name)
+    sys.excepthook = _exception_hook
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+
+    if is_console:
         stream_logger = logging.StreamHandler(sys.stdout)
-        stream_logger.setLevel(conf.verbose)
+        stream_logger.setLevel(logging_level)
         logger.addHandler(stream_logger)
     else:
         syslog_logger = SysLogHandler()
-        syslog_logger.setLevel(logging.DEBUG)
-
-        formatter = logging.Formatter("Traktor Librarian: [%(name)s]  %(message)s")
+        syslog_logger.setLevel(logging_level)
         syslog_logger.setFormatter(formatter)
-
         logger.addHandler(syslog_logger)
-        sys.excepthook = _exception_hook
 
-    if conf.filelog:
-        file_logger = logging.FileHandler("report.log")
-        file_logger.setLevel(logging.INFO)
-
+    if is_filelog:
+        file_logger = logging.FileHandler("log.txt") # os.path.join(get_config_dir(),
+        file_logger.setLevel(logging_level)
+        file_logger.setFormatter(formatter)
         logger.addHandler(file_logger)
 
-        logger.info("="*80)
-        logger.info("TraktorLibrarian run on {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        logger.info("="*80)
-
-    logger.level = conf.verbose
+    logger.level = logging_level
 
     return logger

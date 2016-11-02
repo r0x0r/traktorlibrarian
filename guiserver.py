@@ -10,7 +10,7 @@ if sys.platform == "darwin":
 from clean import Cleaner
 from export import Exporter
 from library import Library
-from logger import configure_logger
+from logger import get_logger
 from conf import *
 
 abspath = os.path.dirname(__file__)
@@ -35,7 +35,7 @@ urls = (
 )
 
 render = web.template.render('templates/')
-logger = configure_logger(logging.getLogger(__name__))
+logger = get_logger(__name__)
 
 
 class Landing:
@@ -47,14 +47,19 @@ class Landing:
 
         if librarian.library_exists(traktor_dir):
             conf.library_dir = traktor_dir
+            traktor_version = os.path.split(traktor_dir)[-1]
+        else:
+            traktor_version = ""
+
         web.header("Cache-Control", "no-cache")
-        return render.index(traktor_dir.replace("\\", "\\\\"), sys.platform)
+
+        return render.index(traktor_version, sys.platform)
 
 
 class Initialize:
     def GET(self):
-        if hasattr(conf, "library_dir"):
-            initialize_library(conf.library_dir)
+        #if hasattr(conf, "library_dir"):
+        initialize_library(conf.library_dir)
 
         web.header("Cache-Control", "no-cache")
         response = {"status": "ok"}
@@ -192,35 +197,20 @@ def initialize_library(directory):
 
 
 
-def start_webserver(port, server_semaphore, tries=0):
+def start_webserver(port):
     import socket
 
     web.debug = False
-    #web.config.log_toprint = False
-    #web.config.log_tofile = False
 
     class WebApplication(web.application):
         def run(self, port=8080, *middleware):
             func = self.wsgifunc(*middleware)
-            return web.httpserver.runsimple(func, ('localhost', port))
+            return web.httpserver.runsimple(func, ('127.0.0.1', port))
 
-    try:
-        global http_port
-        webapp = WebApplication(urls, globals())
-        http_port = port
-        server_semaphore.release()
-
-        webapp.run(port)
-
-    except socket.error as e:  # retry to start a server on a different port if the current pot is occupied
-        if tries > 10:  # give up after 10th try
-            raise e
-        else:
-            server_semaphore.acquire()
-            start_webserver(port + 1, tries + 1)
+    webapp = WebApplication(urls, globals())
+    webapp.run(port)
 
 
-server_semaphore = threading.Semaphore(0)
 
 if __name__ == "__main__":
-    start_webserver(8080, server_semaphore)
+    start_webserver(8080)

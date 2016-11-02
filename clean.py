@@ -4,7 +4,10 @@ import sys
 import os
 import operator
 import logging
-from logger import configure_logger
+from logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class Cleaner:
@@ -15,7 +18,6 @@ class Cleaner:
         self._duplicates = 0
         self._playlist_entries = {}
         self._removed_duplicates = []
-        self.logger = configure_logger(logging.getLogger(__name__))
 
     def remove_duplicates(self):
         """
@@ -40,7 +42,7 @@ class Cleaner:
 
         #Discard unique entries
         duplicates = [entries for entries in ids.values() if len(entries) > 1]
-        self.logger.debug("{} duplicates detected".format(len(duplicates)))
+        logger.debug("{} duplicates detected".format(len(duplicates)))
 
         # Remove duplicates
         for dup in duplicates:
@@ -51,7 +53,7 @@ class Cleaner:
 
                 for entry in remove_entries:
                     old_path = self.library.get_full_path(entry, sys.platform == "win32")
-                    self.logger.info(u"Removing \"{}\" in favour of \"{}\"".format(old_path, new_path))
+                    logger.info(u"Removing \"{}\" in favour of \"{}\"".format(old_path, new_path))
                     self._removed_duplicates.append((old_path, new_path)) # store the same information for UI
 
                     collection.remove(entry) # remove from the collection
@@ -63,12 +65,12 @@ class Cleaner:
                 artist = remove_entries[0].get("ARTIST")
                 title = remove_entries[0].get("TITLE")
 
-                self.logger.info(u"Duplicates of \"{} - {}\" not removed, because none of the source files exist"
+                logger.info(u"Duplicates of \"{} - {}\" not removed, because none of the source files exist"
                                  .format(artist, title))
 
         # And now get down to processing playlists
         self.process_playlists()
-        self.logger.info("\n")
+        logger.info("\n")
         collection.set("ENTRIES", str(len(collection)))
 
     def get_result(self):
@@ -136,7 +138,7 @@ class Cleaner:
         """
         playlists = self.library.playlists
 
-        self.logger.debug("Processing playlists")
+        logger.debug("Processing playlists")
 
         for playlist_entry in playlists.iter("PRIMARYKEY"):
             path = playlist_entry.get("KEY")
@@ -144,7 +146,7 @@ class Cleaner:
                 new_entry = self._playlist_entries[path]
                 new_path = self.library.get_full_path(new_entry, True, True)
                 playlist_entry.set("KEY", new_path)
-                self.logger.debug(u"Playlist entry changed from \"{}\" to \"{}\"".format(path, new_path))
+                logger.debug(u"Playlist entry changed from \"{}\" to \"{}\"".format(path, new_path))
 
                 # Windows version of Traktor uses UUIDs for playlist entries, so those have to be updated as well
                 if sys.platform == "win32":

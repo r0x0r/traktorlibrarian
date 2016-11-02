@@ -10,20 +10,22 @@ import os
 import sys
 import subprocess
 import logging
+import re
 from glob import glob
 
 from conf import *
 from clean import Cleaner
 from export import Exporter
 from library import Library
-from logger import configure_logger
+from logger import get_logger
 
-logger = configure_logger(logging.getLogger(__name__))
+logger = get_logger(__name__)
 
 
 def main():
     try:
         lib = Library(conf.library_dir)
+        logger.debug("Starting")
 
         if conf.action == "clean":
             cleaner = Cleaner(lib)
@@ -62,25 +64,30 @@ def is_traktor_running():
             return False
 
 
+def natural_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key = alphanum_key)
+
+
 def get_traktor_dir():
     base_dir = os.path.expanduser("~")
 
     if sys.platform == "darwin":
         base_dir = os.path.join(base_dir, u"Documents")
     elif sys.platform == "win32":
-        base_dir = os.path.join(base_dir, u"Documents")
+        base_dir = os.path.join(base_dir, u"My Documents")
 
-        if not os.path.exists(base_dir):
-            base_dir = os.path.join(base_dir, u"My Documents")
+    traktor_path = os.path.join(base_dir, u"Native Instruments", u"Traktor*")
+    traktor_path = glob(traktor_path)
 
-    traktor_dir = os.path.join(base_dir, u"Native Instruments", u"Traktor*")
-    traktor_dir = glob(traktor_dir)
-
-    if traktor_dir:
+    if traktor_path:
         # if the Traktor directory exists, then we get the last entry
-        return traktor_dir[-1]
+        sorted_paths = natural_sort(traktor_path)
+        return sorted_paths[-1]
 
     return ""
+
 
 
 def library_exists(directory):
@@ -125,13 +132,13 @@ def parse_arguments():
         conf.library_dir = get_traktor_dir()
 
     if library_exists(conf.library_dir):
-        print(u"Using Traktor library found in {}\n".format(conf["library_dir"]))
+        print(u"Using Traktor library found in {}\n".format(conf.library_dir))
     else:
-        logger.error(u"Traktor library not found in : {}".format(conf["library_dir"]))
+        logger.error(u"Traktor library not found in : {}".format(conf.library_dir))
         return False
 
     if args.verbose:
-        conf["verbose"] = logging.INFO
+        conf.verbose = logging.INFO
 
     # Check that Traktor is not running. Quit if it does.
     if is_traktor_running():

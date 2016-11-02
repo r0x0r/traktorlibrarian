@@ -3,11 +3,12 @@ import shutil
 import os
 import logging
 import threading
-from logger import configure_logger
+from logger import get_logger
 
 from datetime import datetime
 from conf import *
 
+logger = get_logger(__name__)
 
 class Library:
 
@@ -18,7 +19,6 @@ class Library:
         self.semaphore = threading.Semaphore()
         self.traktor_path = path
         self.library_path = os.path.join(path, "collection.nml")
-        self.logger = configure_logger(logging.getLogger(__name__))
 
         if os.path.exists(self.library_path):
             self.semaphore.acquire()
@@ -27,7 +27,7 @@ class Library:
             self.playlists = self.tree.getroot().find("PLAYLISTS")
             self.semaphore.release()
         else:
-            self.logger.critical("Traktor library does not exist: {}".format(self.library_path))
+            logger.critical("Traktor library does not exist: {}".format(self.library_path))
 
     @staticmethod
     def instance():
@@ -44,7 +44,7 @@ class Library:
         :return:
         """
         backup_path = None
-        self.logger.debug("Flushing Traktor library")
+        logger.debug("Flushing Traktor library")
 
         if path is None:
             backup_path = self._backup()
@@ -75,7 +75,7 @@ class Library:
         return etree.SubElement(parent, "PLAYLIST", attrib={"ENTRIES": str(total), "TYPE": "LIST", "UUID": ""})
 
     def _backup(self):
-        self.logger.debug("Creating a backup of Traktor library")
+        logger.debug("Creating a backup of Traktor library")
         backup_path = os.path.join(self.traktor_path, "Backup", "Librarian")
 
         if not os.path.exists(backup_path):

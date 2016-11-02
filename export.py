@@ -8,8 +8,11 @@ from unicodedata import normalize
 from Queue import Queue
 from copy import deepcopy
 
-from logger import configure_logger
+from logger import get_logger
 from conf import conf
+
+
+logger = get_logger(__name__)
 
 
 class Exporter:
@@ -30,10 +33,10 @@ class Exporter:
         self.start_messages = False  # flag that indicates when it is ok to start sending GUI messages
         self.workers = []  # we store worker threads here
         self._cancel = False
-        self.logger = configure_logger(logging.getLogger(__name__))
+
 
     def __del__(self):
-        del self.logger
+        del logger
 
     def export(self):
         self._check_volume()
@@ -79,7 +82,7 @@ class Exporter:
             worker.join()
 
         if not self._cancel:
-            self.logger.info(u"Export finished")
+            logger.info(u"Export finished")
 
     def get_messages(self):
         if self.start_messages and not any([worker.is_alive() for worker in self.workers]):
@@ -94,7 +97,7 @@ class Exporter:
         return messages
 
     def cancel(self):
-        self.logger.debug("Export cancel")
+        logger.debug("Export cancel")
         self._cancel = True
 
     def _check_volume(self):
@@ -109,7 +112,7 @@ class Exporter:
         return worker
 
     def _remove_orphan_files(self):
-        self.logger.debug(u"Removing orphan files")
+        logger.debug(u"Removing orphan files")
         file_paths = self._entries.keys()
         orphans = set(os.listdir(self.music_dir)) - set(file_paths)
 
@@ -117,7 +120,7 @@ class Exporter:
             if self._cancel:
                 break
 
-            self.logger.info(u"Removing {0}".format(orphan))
+            logger.info(u"Removing {0}".format(orphan))
             self.message_queue.put({"action": "delete", "item": orphan})
 
             os.remove(os.path.join(self.music_dir, orphan))
@@ -140,7 +143,7 @@ class Exporter:
                     try:
                         os.mkdir(new_dir)
                     except OSError as e:
-                        self.logger.debug(e)
+                        logger.debug(e)
 
                     recursive_scan(node.find("SUBNODES"), new_dir)
 
@@ -175,7 +178,7 @@ class Exporter:
             if file_name in self._entries:
                 entries.append(self._entries[file_name])
             else:
-                self.logger.debug(u"Skipping non-existing file {0} ".format(file_name))
+                logger.debug(u"Skipping non-existing file {0} ".format(file_name))
 
         return entries
 
@@ -186,7 +189,7 @@ class Exporter:
             parent = etree.SubElement(parent, "ENTRY")
             etree.SubElement(parent, "PRIMARYKEY", attrib={"KEY": path, "TYPE": "TRACK"})
 
-        self.logger.info(u"Exporting playlist {0} to directory {1}".format(name, directory))
+        logger.info(u"Exporting playlist {0} to directory {1}".format(name, directory))
         self.message_queue.put({"action": "playlist", "item": name})
 
         tree = self.library.create_new()
@@ -223,17 +226,21 @@ class Exporter:
             try:
                 if os.path.exists(src):
                     # skip existing unmodified files
-                    if os.path.exists(dest) and (os.stat(src).st_mtime - os.stat(dest).st_mtime) < 60:
-                        continue
+                    if os.path.exists(dest):
+                        diff = (os.stat(src).st_mtime - os.stat(dest).st_mtime)
+                        if diff < 3602:
+                            continue
+                        else:
+                            logger.debug(u"File exists: {0} // Time difference: {1}".format(src, diff))
 
-                    self.logger.info(u"Copying {}".format(file_name))
+                    logger.info(u"Copying {}".format(file_name))
                     self.message_queue.put({"action": "copy", "item": file_name})
                     Exporter._copy(src, dest)
                 else:
-                    self.logger.error(src + u" does not exist")
+                    logger.error(src + u" does not exist")
 
             except IOError as e:
-                self.logger.error(e)
+                logger.exception(e)
 
     @staticmethod
     def _copy(src, dst, buffer_size=10485760):
@@ -262,6 +269,7 @@ class Exporter:
                     st = os.stat(fn)
                 except OSError:
                     # File most likely does not exist
+
                     pass
                 else:
                     # XXX What about other special files? (sockets, devices...)

@@ -24,25 +24,37 @@ body {
     letter-spacing: 0.5px;
     -webkit-user-select: none;
     user-select: none;
+    background: #333 url("../img/debut_dark.png");
 }
 
 
 header {
+  width: 100%;
+  margin-bottom: 100px;
+  background: #333 url("../img/debut_dark.png");
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  position: fixed;
+  z-index: 2;
+
+  .overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin-bottom: 100px;
-    background: #333 url("../img/footer_lodyas.png");
-    box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.05);
-    position: fixed;
-    z-index: 2;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 
   .header-container {
-      padding: 30px 30px 20px 30px;
+      padding: 20px 30px 20px 30px;
   }
 
   .library-location-container {
+    position: absolute;
+    top: 0px;
+    right: 5px;
     font-size: 14px;
     padding: 6px;
-    background-color: rgba(59, 59, 59, 0.9);
     text-align: right;
   }
 }
@@ -66,7 +78,7 @@ h1 {
 
   span {
     position: absolute;
-    left: 0;
+    left: 40px;
     -webkit-transition: left 0.5s;
     transition: left 0.5s;
   }
@@ -76,6 +88,10 @@ h1 {
 
     i {
       opacity: 1;
+    }
+
+    .logo {
+      display: none;
     }
 
     span {

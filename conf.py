@@ -8,5 +8,5 @@ class Conf(dict):
 
 conf = Conf()
 conf.verbose = logging.DEBUG
-conf.is_console = False
+conf.is_console = True
 conf.filelog = False
