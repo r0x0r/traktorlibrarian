@@ -1,5 +1,5 @@
 # TraktorLibrarian 
-Version 2.0
+Version 2.1
 
 For installation packages and binaries, visit http://flowrl.com/librarian/
 
@@ -13,6 +13,11 @@ Traktor Librarian is OSX and Windows compatible and comes in GUI and command lin
 
 
 # Changelog
+
+## 2.1
+
+- `New` Windows 10 compatibility
+- `Fixed` Random race conditions and various bugs
 
 ## 2.0
 
